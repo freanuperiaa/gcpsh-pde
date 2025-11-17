@@ -3,5 +3,194 @@
 -------------------------------
 
 
+- Components of Google Cloud SDK
+
+gcloud - command line interface
+client libraries - helps you build applications that use GCP services (like my local python scripts)
+bq - command line tool for interacting with BigQuery
+gsutil - command line tool for interacting with Cloud Storage
 
 
+-------------------------------
+-- gcloud
+-------------------------------
+
+Allows you to do basically anything you can do through web console, plus more, using the command line
+
+*installed the gcloud locally, and did the `gcloud init` thing*
+
+
+-------------------------------
+-- GCP Resource Hierarchy
+-------------------------------
+
+Projects
+    - fundamental, lowest level unit of organization in GCP
+    - contains all GCP resources/services such as VMs, pipelines, databases
+    - distinct entity for billing, access management, and APIs
+
+
+Organization
+    - top-level container in GCP
+    - represents entire company, organization, or division
+    - projects can exist without organizations
+    - useful for centralizing management of multiple projects
+
+Folder
+    - optional intermediate-level unit
+    - can group projects together under an organization
+
+
+-------------------------------
+-- Project Name, project ID, number
+-------------------------------
+
+Project Name
+    - human-readable identifier for a project
+Project ID
+    - globally unique alphanumeric identifier. Immutable. used when interacting with APIs, gcloud
+Project Number
+    - globally unique numerical identifier, cannot be chosen. Used internally by GCP
+
+
+-------------------------------
+-- Org Level Role
+-------------------------------
+
+Organization Administrator
+    - full access to all resources within org
+Organization Policy Admin
+    - manages organization policies, constraints, conditions
+Viewer
+    - view-only access, for audits, monitoring
+Browser
+    - read-only access to view structure and metadata of projects and folders
+
+
+-------------------------------
+-- Org Policies
+-------------------------------
+
+Org Policies are tools for centralized governance in GCP
+Ability to enforce organization-wide policies on resource usage and constraints
+
+
+- Org Policies to know
+
+constraints/compute.resourceLocations
+    - constrain resources to only operate within certain geographic regions
+constraints/iam.allowedPolicyMemberDomains
+    - control which domains users must belong to in order to be added to IAM
+constraints/compute.vmExternalIpAccess
+    - constrain or block VMs from having external IPs
+constraints/compute.requireOsLogin
+    - must use IAM to control SSH access to VMs
+
+
+-------------------------------
+-- Cloud IAM
+-------------------------------
+
+IAM lets you manage who (person or service acount) has what acccess (roles/permissions)
+to which resources in GCP
+
+
+Principals
+    - entity that can be granted access to GCP resources. They are what IAM Policies are applied to
+    - User Accounts (associated with a human), Service Accounts (intended to be used by applications)
+
+
+-------------------------------
+-- Types of Service Accounts
+-------------------------------
+
+Google-Managed vs User-managed service accounts
+
+Google-Managed
+    - automatically created
+    - used by GCP Services
+    - comes with default permissions
+    - name predetermined
+
+User-managed
+    - user created, custom named
+    - permissions customized from the start
+    - usually used for a very specific task
+
+
+-------------------------------
+-- Permissions and Roles
+-------------------------------
+
+Permissions
+    - very granularized actions that you can authorize a principal to take
+
+Roles
+    - collection of permissions
+
+
+-------------------------------
+-- Role Type Details
+-------------------------------
+
+- Basic Roles
+
+Owner
+    - full access to all resources
+    - can also manage roles and permissions
+
+Editor
+    - read/write access to most resources
+    - cannot manage roles and permissions
+
+Viewer
+    - read-only access
+    - cannot modify any resources in GCP
+
+
+Predefined roles
+    - specific to a given GCP Service/API
+    - correlates to common roles/use cases
+    - e.g. BigQuery Job User, Storage Object Viewer, Cloud Run Developer
+
+Custom Roles
+    - defined and managed by you
+    - you select the combination of permissions to include
+
+
+-------------------------------
+-- Principle of Least Privilege
+-------------------------------
+
+When users/applications have more permissions than necessary, they can inadvertently or maliciously 
+perform actions that compromize the security, integrity, and confidentiality
+of the system
+^ this is one of the risk of overprivileged access
+
+Principle of least privilege is the idea of allocating the minimum necessary permissions
+to a principal in order for them to do what they need.
+
+
+-------------------------------
+-- Access Approval
+-------------------------------
+
+Allows Google Support teams to request access to your resources to assist with support cases
+
+
+-------------------------------
+-- Groups
+-------------------------------
+
+To manage multiple members with similar or identical access needs
+
+
+-------------------------------
+-- Cloud IAM - gcloud commands
+-------------------------------
+
+1. Copy roles 
+    - cloud iam roles copy
+
+2. Get IAM policies for different resources
+    - gcloud <resource> get-iam-policy
