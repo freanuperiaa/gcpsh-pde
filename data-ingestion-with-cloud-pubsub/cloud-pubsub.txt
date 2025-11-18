@@ -52,3 +52,117 @@ Pull Subscription
 -------------------------------
 -- Message Handling
 -------------------------------
+
+- Pub/Sub Message Lifecycle
+
+1. Topic Creation - Topic is named and made available within Pub/Sub
+
+2. Publication - Publisher sends a message to that topic, which Pub/Sub holds in a queue,
+                            to be served thru a subscription
+
+3. Receipt - Subscriber either pulls the message from the Pub/Sub topic, or has message published to them
+
+4. Acknowledgement - Subscriber acknowledges to Pub/Sub that they have received the message
+
+5. Deletion - Pub/Sub deletes the message once acknowledged
+
+
+Message Retention Duration - the time period for which Pub/Sub retains messages before deleting
+                           - this ensures that messages are available for replay
+
+topic retention - retains messages within a topic, even after they are acknowledged
+subscription retention - retains unacknowledged messages for a particular subscription.
+
+
+Snapshot - used to capture a specific state of a subscription as a recovery point for potential future use
+
+Seek - allows you to change the acknowledgement state of messages, including already-acknowledged messages
+     - this means you can replay previously-acknowledged messages
+
+
+
+-------------------------------
+-- Message Delivery and Acknowledgement
+-------------------------------
+
+Delivery Semantics - guarantees provided by a system regarding how many times a message is delivered to a sub
+                    - (in pubsub) how the system handles message delivery and sharing reliability
+
+At-Least-Once Delivery
+    - ensures that every message will be delivered at least once
+    - no message is lost
+    - however, duplicates may occur
+
+Exactly-Once Delivery
+    - Ensures that every message is delivered exactly once
+
+
+At-Least-Once Delivery is the default in Cloud Pub/Sub
+
+
+Acknowledgement Deadline - time window which a subscriber must acknowledge a received message before a retry is attempted
+
+
+-------------------------------
+-- Retries
+-------------------------------
+
+Lack of Acknowledgement
+    - if messages are not acknowledged within deadline, they are redelivered, which can result in increase in message volume
+    - if you see a sudden increase in message volume, this could be because the subscriber is not acknowledging
+    - you would expect there to be subscriber errors in this case. If none, it means that the subscriber is not handling run-time errors properly either
+
+
+For retries, we can set exponential backoff, so that we can give breathing room for the subscriber
+
+Max Retries - configures the maximum number of retries before messages are considered permanently failed
+
+
+Dead Lettering - mechanism that handles messages that hit their max retries
+               - failed messages are sent to a separate topic called "dead-letter" topic
+               - helps manage messages that are problematic and allow later investigation
+
+
+-------------------------------
+-- Monitoring
+-------------------------------
+
+Important metrics to monitor subscriber health
+    - total number of messages in the pub/sub queue
+    - oldest unacknowledged messages
+    - number of unacknowledged messages
+
+
+-------------------------------
+-- Publish Timeout
+-------------------------------
+
+Publish Timeout is when a message is fails to be sent to a topic within a given timeframe, 
+therefore the message never reaches the intended topic
+
+as best practice, publisher applications will often have a timeout for publishing messages
+
+
+-------------------------------
+-- Common Ingestion Pattern
+-------------------------------
+
+Common Ingestion Scenario
+
+1. Pub/Sub (point where data is collected)
+
+2. Dataflow (data transformations happen)
+
+3a. Cloud Storage (unstructured data)
+3b. BigQuery (Relational Data for SQL)
+3c. BigTable (NoSQL, time series, IoT)
+
+*common ingestion scenario that can be asked in exam*
+
+-------------------------------
+-- IoT Gateway
+-------------------------------
+
+IoT Gateways bridge the gap between IoT devies and Google Cloud Pub/Sub
+        - it collects data from IoT device(s), and prepares and sends it to Pub/Sub
+
