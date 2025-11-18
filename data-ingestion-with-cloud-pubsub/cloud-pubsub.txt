@@ -1,3 +1,54 @@
 -------------------------------
 -- Intro to Cloud Pub/Sub
 -------------------------------
+
+Pub/Sub is a global-scale messaging service that allows communication 
+between different systems by decoupling senders and receivers
+
+
+- Publishers & Subscribers
+
+Publisher
+    - an entity (application or service) that creates and sends messages
+        to Cloud Pub/Sub
+    - it doesn't need to know who will receive or process the messages
+
+Subscriber
+    - an entity that receives messages from Pub/Sub
+    - it tells Pub/Sub that it has received the message and processes it
+
+- Topics and Subscriptions
+
+Topic
+    - a named resource to which publishers send messages
+    - it acts like a channel or category under which messages are sent
+
+Subscription
+    - named resource representing the stream of messages from a specific topic to a subscriber
+
+
+** Gemini **
+A publisher sends a message to a topic, and a subscription is how a subscriber receives messages from that topic. 
+The publisher and subscriber are decoupled, meaning the publisher doesn't need to know about the subscribers, 
+and the publisher can send messages to the topic without knowing if any subscribers are listening. 
+The subscription acts as the intermediary, ensuring messages are delivered to the intended subscribers. 
+
+
+-------------------------------
+-- Push vs Pull Subscriptions
+-------------------------------
+
+Push Subscriptions
+    - Pub/Sub initiates, sends message to subscriber without waiting for any requests
+    - Push subscriptions are better for low latency, real-time streaming use cases
+    - subscriber must be a webhook endpoint that accepts POST over HTTPS
+
+Pull Subscription
+    - Subscriber initiates, asks Pub/Sub for messages
+    - better for batch delivery, large volume of messages
+    - usually requires more code
+
+
+-------------------------------
+-- Message Handling
+-------------------------------
