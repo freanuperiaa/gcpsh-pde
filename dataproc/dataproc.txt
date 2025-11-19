@@ -1,0 +1,67 @@
+-------------------------------
+-- Intro to Dataproc, Hadoop Arch
+-------------------------------
+
+Dataproc is a managed, on-demand version of Apache Hadoop and Spark
+    Data replication ensures availability even during node failures
+    Distributed computing enables parallel processing for faster results. Instead of relying on one central processor, workload is distributed across numerous nodes
+
+
+Master Node - Manages data distribution and task coordination
+Worker Nodes - store data and execute assigned tasks
+
+    - Master Node -                                     - Worker Node -
+    HDFS NameNode       <- connected to multiple ->      HDFS DataNode
+YARN Resource Manager                                   YARN NodeManager
+
+
+
+- MapReduce
+
+In distributed processing, this is the process of mapping large jobs to many worker nodes 
+and reduce them back into a coherent result
+
+^ this is the foundation of Apache Hadoop
+
+- HDFS (Hadoop Distributed File System)
+
+allows the storage of vast amounts of data by distributing it across multiple nodes
+
+Architecture:
+    NameNode (Master): Stores metadata (what file blocks exist where)
+    DataNodes (Slaves): Store actual data blocks
+    Blocks: Files split into large blocks (128MB+)
+    Replication: Each block copied to 3+ nodes (default)
+
+- Apache Hive
+Data warehouse in the Apache Ecosystem, common workload to be migrated to the cloud
+most popular formats are parquet and ORC (optimized row-column)
+
+Dataproc efficiently runs Hive queries on managed Hadoop clusters.
+Hive data would usually be stored on Cloud Storage where it can be accessed via BigQuery or Dataproc
+
+
+-------------------------------
+-- Migration Best Practices
+-------------------------------
+
+Rule of thumb is to migrate on-prem Spark and Hadoop jobs to Dataproc
+
+Cluster migration best practices
+    move the data first (usually to GCS)
+    perform small-scale testing on a subset of data initially
+    leverage ephemeral clusters
+    use GCP tools to optimize and save costs (autoscaling, preemptible nodes)
+
+Data destinations after dataproc migration:
+    Hadoop HDFS -> Cloud Storage
+    Apache Hive, Apache Impala -> BigQuery
+    Apache HBase -> Cloud BigTable
+
+
+-------------------------------
+-- Data Storage and Access
+-------------------------------
+
+
+
