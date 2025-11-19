@@ -1,0 +1,327 @@
+-------------------------------
+-- Intro to Dataflow
+-------------------------------
+
+Dataflow can handle batch AND streaming data. It is Google's version of Apache Beam
+Dataflow is auto-scaling, serverless/no-ops
+natively integrates with Cloud Storage, Pub/Sub, BigQuery
+Connectors available for BigTable and Kafka
+
+** Gemini **
+GCP Dataflow bridges the problem of having to use two separate systems for batch and stream processing by allowing developers to use a single unified programming model and pipeline for both. This simplifies development and maintenance, eliminates the need to maintain separate batch and stream pipelines, and allows for both real-time and historical data analysis within the same architecture. 
+
+
+-------------------------------
+-- Core Concepts and Terminology
+-------------------------------
+
+- PCollection & Elements
+
+PCollection - Distributed dataset, data input, and output
+    
+    Distributed Datasets
+        - PCollection is not a single, centralized dataset, its elements are spread across multiple nodes
+        - each machine handles a different subset of the PCollection
+
+    Elements - represents a record in the PCollection
+
+
+PTransform - "Pipeline Transform" in the context of Dataflow/Beam
+
+    ParDo - a type of transform applied to individual elements of a PCollection
+          - good for filtering/extracting elements
+
+    DoFn - custom logic that is applied to each element 
+
+    ** Gemini **
+    ParDo is the mechanism for executing parallel transformations on a PCollection.
+    DoFn is the code that defines the specific logic of that transformation, executed by ParDo.
+
+
+- Side Input & Side Output
+
+Side Input
+    - Supplemental input data provided to PTransform, useful for accessing external references
+    - e.g. lookup tables, configuration data
+
+Side Output
+    - additional output PCollections that let you direct some results to alternate destinations
+    - e.g. sending errors to a different output
+
+
+- Other PTransforms
+
+GroupByKey 
+    - similar to GROUP BY in SQL
+    - values are grouped by a key, but instead of an aggregate value, you get an iterable/list of values
+    - example:
+        ('apple',3)
+        ('banana',4)
+        ('apple',5)
+        ('banana',6)
+
+        *GroupByKey*
+
+        ('apple', [3, 5])
+        ('banana', [4, 6])
+
+CoGroupByKey    
+    - combines values from multiple PCollections by a common key
+    - example
+        PCollection 1
+        ('apple',1)
+        ('banana',2)
+        ('apple',3)
+
+        PCollection 2
+        ('apple','red')
+        ('banana','yellow')
+        ('apple','sweet')
+
+        *CoGroupByKey*
+        ('apple', ([1, 3], ['red', 'sweet']))
+        ('banana', ([2], '['yellow']))
+
+    - useful for merging datasets that share the same keys, like counts or characteristics of items
+
+Flatten
+    - merges multiple PCollections of the same type into a single PCollection
+    - example
+        PCollection 1
+        ('apple',3)
+        ('banana',4)
+
+        PCollection 2
+        ('orange',2)
+        ('pear',6)
+
+        PCollection 3
+        ('grape',5)
+    
+        *Flatten*
+        
+        *single output PCollection*
+        ('apple',3)
+        ('banana',4)
+        ('orange',2)
+        ('pear',6)
+        ('grape',5)
+    
+
+-------------------------------
+-- Windows
+-------------------------------
+
+How to "chunk" or group data when you have a constant influx of data in a streaming pipeline?
+one method is to use "windows"
+
+- Three types of Windows in Dataflow
+
+Tumbling Windows (fixed windows)
+    - data is divided into distinct non-overlapping intervals of times. each window is a fixed size and does not overlap with other windows
+
+Hopping Windows (sliding windows)
+    - a fixed-duration time window that "hops" or slides forward by a smaller, specified interval, allowing it to overlap with previous windows
+
+Session-based Windows
+    - defined by a natural activity in data\
+    - ** Gemini **
+    When a period of inactivity exceeds a user-defined gap duration, the current session window ends, and a new one begins with the next event. This is useful for grouping user-centric events, such as a user's web browsing session, where the duration is dynamic and determined by when a user stops interacting. 
+    - dynamic, user-centric, defined by a gap duration instead of a fixed window length
+
+
+-------------------------------
+-- Watermarks and Triggers
+-------------------------------
+
+Watermarks 
+    - timestamps that keep track of progress in your pipeline, lets us know where we are in processing data
+    - if a step fails or stalls, the watermark does not advance
+
+    Late-arriving data - determine which window data belongs to, and ensure calculations are accurate
+
+    Event time vs Processing Time: The system processes data based on when the event occurred (event time) and 
+        tracks progress with watermarks, even if data arrives later (processing time)
+
+    ** Gemini **
+    It acts as a moving checkpoint to manage windowed operations, ensuring that all events within a specific time window are accounted for before any results are finalized. Watermarks are based on event time (when the event occurred), not processing time (when the system receives it), which allows for accurate handling of late-arriving data. 
+
+Triggers
+    - conditions that determine when the aggregated results of data should be emitted
+    - important in unbounded/streaming data pipelines
+    - late-arriving data: triggers can be used to re-fire a window, updating it with new data that has arrived late (behind the watermark)
+
+Types of Triggers:
+    Event-time trigger - fired when watermark reaches a certain point
+    Processing-time trigger - fired based on real-world clock time
+    Data-driven trigger - fired when a certain number of data records are processed
+
+
+-------------------------------
+-- Common Challenges
+-------------------------------
+
+Increased Latency
+    - watch for increases in end-to-end or per-stage latency
+    - indicators of bottlenecks:
+        - specific stages taking longer than expected
+        - data backlogs in certain stages
+        - high latency values in the monitoring dashboard
+    
+    - what to do:
+        - inspect logs for pipeline and workers
+        - identify specific bottlenecks or steps where latency is higher
+        - look for resource limitations, data skew, or dependencies that might be causing delays
+
+Missing Messages
+    - gaps in data
+    - incomplete aggregations
+    - sudden drop in throughput
+    - ^these may indicate messages missing in your pipeline
+
+    - what to do:
+        - run a batch of the streaming data and check the output, compare to the ones that were streamed
+            - (ensures no data is dropped, and isolates if the issue is due to pipeline configuration or data loss)
+
+            1. Capture streaming data - store incoming streaming data in Cloud Storage or BigQuery
+            2. Create a batch job - modify the datafflow job config to processed data in batch mode
+            3. compare results - check for missing messages that were not processed
+            4. diagnose - check whether if the issue is on the pipeline or in source
+
+Out of Order Data
+    - Use a combination of windows, watermarks, and triggers to organize data into time windows, 
+        determine when data was submitted or processed in dataflow, allow stragglers (late-coming data) 
+        to catch up, and decide when to emit the final results.
+
+Fusion
+    - Sometimes Dataflow combines several pipeline steps into one execution stage. 
+        this optimizes some processes but can lead to parallelization issues
+
+    - pipeline is using small number of workers out of the maximum allowed, and the pipeline is progressing slowly
+        - this suggests that the work is not parallelizing efficiently, and Fusion is happening
+
+    - strategies for preventing Fusion:
+        a. Peform a GroupByKey and Ungroup - this forces Dataflow to treat the data as more significant
+        b. SideInput - makes Dataflow handle the data separately instead of combining steps
+        c. Reshuffle - acts a sa break in the pipeline that stops Dataflow from combining steps before/after
+
+
+-------------------------------
+-- Networking
+-------------------------------
+
+Essential ports
+    TCP 443 (HTTPS)
+        - ALL Dataflow Jobs
+        - used with service control plane, API requests, and metadata exchange
+    TCP 12345
+        - streaming jobs without Shuffle/Streaming Engine
+        - worker-to-worker and worker-to-service
+    TCP 12346
+        - Batch jobs without Shuffle/Streaming Engine
+        - worker-to-worker and worker-to-service
+
+Firewall Rules
+    - When using Dataflow within a VPC, ensure firewall rules allow ingress and egress on necessary ports
+        - TCP 443 for job management and API requests
+        - TCP 12345 and 12346 for communication between workers and services
+
+Internal IPs only
+    - for extra security, can set Dataflow to use interal IP addresses only
+    - to allow connection with GCP services like Pub/Sub and BigQuery, enable Private Google Access in the subnetwork
+
+
+-------------------------------
+-- Pipeline Setup
+-------------------------------
+
+workerMachineType - picking whether to use a general purpose, high-mem, high-cpu, or preemptible worker type
+
+Autoscaling in Dataflow
+    - can be enabled to automatically adjust the number of worker nodes based on incoming data volume
+    - horizontal autoscaling (adding more nodes)
+
+maxNumWorkers - configures the maximum number of workers allowed for your pipeline when autoscaling
+
+If you have autoscaling enabled and you need to improve the throughput of your pipeline:
+    1. increase the number of workers (maxNumWorkers)
+    2. change the machine type to something more powerful (workerMachineType)
+
+
+-------------------------------
+-- Updating Pipelines
+-------------------------------
+
+Update your dataflow pipeline without stopping using the "Update Job" method
+    - this creates a new job with the same name, but assigns a new Job ID, ensures pipeline is updated without interrupting current job
+    - GCP performs compatibility checks to ensure smooth transitions
+
+If you're unsure about compatibility or your making major changes (windowing, triggering)
+use the Drain Option
+    - Drain ensures that all in-flight data is processed, then pauses the pipeline
+    - no new data is processed until the new job starts
+
+
+-------------------------------
+-- Errors and Monitoring
+-------------------------------
+
+Dealing with errors
+    - first step should be reviewing logs and PCollection contents after each processing step
+
+Catching errors
+    - catch errors within the pipeline by using a try-catch, and then output the errors in a new PCollection
+    - send the PCollection somewhere, such as Pub/Sub, for later analysis
+
+SideOutput for errors
+    - create a SideOutput in the middle of a DoFn for further handling
+    - ex. elements that fail processing get sent in a SideOutput to a Pub/Sub topic
+    - volume of messages is monitored in Cloud Monitoring
+
+
+- Dataflow metrics to track
+    Watermark Age - measures the data's freshness in your streaming pipeline
+    System Lag - tracks data wait time in the system, identifying slowdowns
+    Backlog (bytes) - shows the amount of unprocessed data in both streaming and batch pipelines
+    Backlog Processing - estimates the time needed to process the current backlog
+    Memory Capacity - monitors worker memory usage to prevent resouce exhaustion
+    Worker Memory Limit - defines total memory for workers, help avoid memory issues
+
+
+-------------------------------
+-- Integration with other tools
+-------------------------------
+
+native integration with Cloud Storage, Pub/Sub, BigQuery
+connections available for: Cloud BigTable, Kafka
+
+Cloud Storage should be your go-to place for storing data in a Dataflow Pipeline
+
+
+-------------------------------
+-- Cost Optimization
+-------------------------------
+
+Cost considerations:
+    1. choice between batch vs stream - Batch is significantly cheaper, streaming incurs cost continuously, making it less suitable for periodical tasks
+    2. worker machine type - select right machine type for your process
+    3. pipeline optimization - efficiency in the code in your pipeline
+    4. worker storage - optimize disk usage by choosing right data format, disk size
+    5. region selection - region close/far to your data source might impact
+
+^ these are ordered from the most impactful to least impactful. 
+you may be asked in the exam what to do to reduce the cost of your pipeline
+
+
+-------------------------------
+-- IAM
+-------------------------------
+
+Can only define at the project level. There aren't Dataflow-specific resources (like BQ datasets) that you can define the roles at
+
+Dataflow Admin - Full pipeline access and configuration or machines and storage buckets
+Dataflow Developer - Full pipeline and code access, no configuration of machines and storage
+Dataflow Viewer - allow users to view and monitor jobs only
+Dataflow Worker - for compute engine svc acct
+
+
