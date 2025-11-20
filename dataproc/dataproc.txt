@@ -64,4 +64,111 @@ Data destinations after dataproc migration:
 -------------------------------
 
 
+Cloud Storage Connector
+    - designed to be a replacement for HDFS, allowing Hadoop and Spark workloads to use Cloud Storage instead of HDFS for data. 
+        This is achieved by providing HDFS compatibility through the gs:// prefix, enabling developers to access data in Cloud Storage with the same tools and frameworks used for HDFS.
+
+BigQuery Connectors
+    Spark-BigQuery Connector
+    Hive-BigQuery Connector
+    Hadoop-BigQuery Connector
+
+Connecting to BigTable
+    a.) HBase Client (Dataproc) -> Client (HBase) -> Cloud Bigtable
+    b.) BigTable-Spark Connector
+
+
+-------------------------------
+-- Cluster Setup and Management
+-------------------------------
+
+Main configuration options in Dataproc
+    - Region and Zone
+    - Cluster Mode (single-node vs multi-node; number of masters/workers)
+    - disk type & size
+    - local SSD size
+    - preemtible nodes (cost-effective for non-critical jobs)
+    - Cloud Storage bucket for job logs, temp data, output
+
+Cluster mode options
+    Single node (1 master, 0 workers)
+        - very lightweight. ideal for development
+
+    Standard mode (1 master, custom # of workers)
+        - default for production
+
+    High availability (3 master nodes, custom # of workers)
+        - critical workloads
+
+after a Dataproc cluster is created, you can later:
+    - change the number of workers and preemptible VMs
+    - change the labels on your cluster
+    - toggle graceful decommissioning
+
+(Note: Resharding of data is handled automatically when you update a Dataproc cluster)
+
+Preemptible Nodes
+    - much cheaper but can be reclaimed by Google at any time
+    - can choose how many to add to cluster, but need at least one standard worker node first
+    - best used for compute-intensive tasks that are resilient to interruptions
+
+Graceful Decommissioning
+    - safely removes worker nodes without interrupting active jobs. This redistributes data from decommissioned nodes to prevent data loss
+        maintains cluster stability and prevents job failures during scaling or node removal
+    - applies only to standard worker nodes
+    - important in mixed setups with both preemptible and standard nodes, ensuring critical workloads aren't disrupted
+    - must be enabled
+
+
+-------------------------------
+-- Performance Optimization
+-------------------------------
+
+Optimization Strategies
+
+    - Place Dataproc cluster in the same region as the storage bucket that has your data (less ingress/egress)
+
+    - increase size of persistent disk
+
+    - consider SSD over HDD (will increase costs though)
+
+    - allocate more VMs (choose preemptible VMs to save on costs). This will cost more than increasing disk size though
+
+
+Network communication issues
+    - Check firewall rules. When your Dataproc nodes are unable to communicate with each other, check for any misconfigured firewall rules
+
+    - ensure the right network tags are assigned to the cluster and the necessary ports are open
+
+    - Dataproc uses TCP for communication.
+
+
+-------------------------------
+-- IAM Roles
+-------------------------------
+
+Dataproc Admin - full control over Dataproc, including operators and templates
+Dataproc Editor - full access to create/delete/edit clusters, jobs, and workflows.
+                - can be Cluster level or Project level
+Dataproc Job User - can submit jobs to existing clusters but can't create or delete clusters
+                - can be Cluster level or Project level
+Dataproc Viewer - view access only
+                - can be Cluster level or Project level
+Dataproc Worker - assigned to svc acct to read/write cloud storage and write to cloud logging
+                - can be Cluster level or Project level
+
+-------------------------------
+-- Dataproc vs Dataflow
+-------------------------------
+
+Use Dataproc When:
+    - you have dependencies on specific tools in Hadoop/Spark ecosystem
+    - you want to continue using Hadoop/Spark
+    - if you prefer a hands-on approach to operations and cluster/node management
+
+
+Use Dataflow When:
+    - You don't have Hadoop/Spark dependencies
+    - you're migrating Apache Beam
+    - you prefer a serverless/hands-off approach to operations
 
