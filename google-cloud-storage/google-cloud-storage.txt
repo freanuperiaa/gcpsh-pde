@@ -1,0 +1,307 @@
+-------------------------------
+-- GCS Overview, Bucket Setup
+-------------------------------
+
+Holds all data types (blob storage)
+GCP version of AWS S3. For both, containers are called buckets
+individual files/items within buckets are called objects
+
+
+- gsutil
+    command line tool specifically for Cloud Storage
+    has helpful utility functions such as uploading, downloading, deleting/copying
+    can enable parallel composite uploads to maximize the use of available bandwidth
+    common commands
+        .- gsutil cp
+        .- gsutil rsync (sync folders/buckets)
+        .- gsutil ls (list)
+  
+- Storage Classes
+    Standard
+        - High availability, low latency, frequenty accessed
+        - more expensive cost/GB, cheaper data retrieval cost
+    Nearline
+        - Accessed less than once/month
+    Coldline
+        - Archives that still need to be accessed for disaster recovery
+    Archive
+        - Accessed once per year or less, e.g. for audit/compliance
+        - cheaper cost/GB, more expensive data retrieval cost
+
+    - Object-Level Override: storage classes can be set at the bucket level, 
+        or later set for specific objects (overriding the bucket default)
+
+- Location Options
+    Regional Storage
+        - When you need to keep data in a certain location (e.g. compliance)
+        - need low-latency in that location
+        - generally cheaper
+    
+    Multi-Region
+        - US, EU, or Asia
+        - Access across multiple regions
+        - Highest availability and global access with minimal latency
+    
+    Dual Region
+        - In-between use cases
+        - Higher durability, availability than regional storage
+
+
+-------------------------------
+-- Lifecycle Rules, Versioning, and Retention
+-------------------------------
+
+Lifecycle Rules - used to manage the transition of objects to different storage classes, or their deletion,
+                    based on specific conditions such as their age
+                - Set transition rules based on conditions such as age of data
+                - deleting outdated or unnecessary data
+                - cost reduction through automated management
+                - example: SetStorageClass action allows you to change the storage class when condition is met
+
+
+Object Versioning
+
+When object versioning is enabled: 
+    replacing an object with the same name makes the old one a noncurrent version in the same bucket
+
+    Deleting an object creates a delete marker, making the previous version noncurrent in a versioned bucket
+
+    gsutil versioning set on gs://[BUCKET_NAME]
+
+
+Retention Policies
+    sets a retention period during which objects cannot be deleted or replaced
+    the policy applies retroactively to all existing and new objects in the bucket
+
+    Bucket Lock:
+        a retention policy can be locked to make it permanent. Once locked, it cannot be removed or reduced in duration
+        locked policies prevent bucket deletion until all objects meet the retention period but allow
+            for an increase in the retention period
+        helps further comply with data retention regulations
+    
+    !!! Retention policies cannot be used simultaneously with object versioning !!!
+
+
+Autoclass
+    automatically transitions objects between storage classes based on access patterns
+    must be enabled
+    still potentially more savings with Lifecycle rules (Autoclass starts at standard)
+
+    Standard <30 days> Nearline <90 days> Coldline <365 days> Archive
+                
+                        ^days not accessed
+
+
+-------------------------------
+-- Availability and Failover Strategies
+-------------------------------
+
+Recovery Point Objective (RPO)
+    - The time between the last synchronization/backup point and the disaster
+    - maximum amount of data your system can afford to lose during an outage
+    - we reduce the RPO by synchronizing more frequently
+
+    RPO defines the maximum acceptable amount of data loss, measured in time, when a disaster/outage occurs
+    
+    implement a failover to at least a secondary region and replicate data more often than your
+        company's RPO
+
+Dual-region and Multi-region storage options provide built-in failover and availability
+    without any complex configurations
+
+With multi-region, your data is essentially across an entire continent
+Dual-region provides a middle-ground, letting you choose two regions your data is stored in
+99.9% of objects replicated within 1 hour
+
+Turbo Replication
+    - provides much faster data replication
+    - Good to ensure high availability and rapid failover in case of a regional outage
+    - Only available for dual-region, RPO of 15 mins
+
+
+-------------------------------
+-- Managing Access
+-------------------------------
+
+Ways to grant GCS access
+
+    IAM Policies
+        - basic, predefined, or custom roles
+        - org, folder, project, bucket levels
+        - object-level control requires conditional IAM Policies
+    
+    ACL (Access Control Lists)
+        - object level only
+        - owner, writer, reader
+        - suitable for fine-grained, object-specific control
+        - CONSIDERED LEGACY
+    
+    Signed URLs
+        - temporary access
+        - read or write
+        - expiration time
+        - anyone with the URL can access
+
+for IAM Policy:
+    Hierarchical Inheritance - IAM Permissions set at a given level of a resource hierarchy propagate downwards
+        Org -> Folder -> Project -> Bucket -> Object
+
+Common IAM Roles
+
+    Storage Admin - grants full control over Cloud Storage resources
+    Storage Object Admin - lets you manage objects in Cloud Storage buckets
+    Storage Object Creator - lets you upload objects in Cloud Storage buckets
+    Storage Object Viewer - lets you read objects in Cloud Storage buckets
+    Storage Legacy Bucket Reader - grants ability to read bucket metadata and data
+
+Signed URLs
+    - a secure way to granting time-limited access to a specific object in a bucket without requiring authentication
+    - you provide a unique link with an expiration time
+
+    - you may get a 403 error when using signed URLs 
+        403 errors typically indicate permission issues, so increase the validity period of the signed URLs
+
+Hosting static websites
+
+    Cloud Storage is able to host static websites
+    Static files can have metadata set to influence browser behavior
+        "Content-Type" metadata can be set to the appropriate media type to ensure direct playback in the browser 
+                        instead of prompting a download
+
+
+-------------------------------
+-- Migrations, Uploads, Transfer
+-------------------------------
+
+Transfer Appliance
+    1. Order the Transfer Appliance from GCP, device is shipped to you
+    2. Fill the appliance with data
+    3. Ship it back
+    4. Google loads your data into the designated GCS bucket
+    5. verify and start using your data
+
+    - good for large, one-time data migrations when network bandwidth is limited
+    - move petabytes of data efficiently and securely
+
+Storage Transfer Service
+
+    - Managed service that allows you to easily transfer data from on-prem or to/from other clouds
+    - move data to/from other clouds, move data from on-prem to GCP
+    - automate ongoing or scheduled transfers
+    - High bandwidth and stable connection needed. at least 100Mbps
+    - Up to hundreds of terabytes
+
+Approximating time to transfer
+    
+    transfer time (seconds) = Data size (bits) / bandwidth (bits per second)
+
+    1. convert data size to bits
+        1 Megabyte (MB) = 8 Million bits
+        1 Gigabyte (GB) = 8 Billion bits
+        1 Terabyte (TB) = 8 Trillion bits
+        1 Petabyte (PB) = 8 Quadrillion bits
+
+        Or know that each higher unit is roughly 1000 times larger, and there are 8 bits in a byte
+
+    2. convert bandwidth to bits per second
+        1 Mbps = 1 million bps
+        1 Gbps = 1 Billion bps
+
+        Or know that each higher unit is about 1000 times bigger than the one before it
+
+    3. divide data size by bandwidth
+
+    
+    example
+        you have 300GB of data and a 10Mbps internet connection. How long would it take you 
+        to transfer your data to GCP over the internet?
+
+        1. 300 GB = 2.4 Trillion bits (since 1GB = 8 billion)
+
+        2. 10 Mbps = 10 million bps (since 1 Mbps = 1 million bps)
+
+        3. (2.4 trillion bits / 10 million bps) = 240,000 seconds
+
+        240,000 seconds ~ 67 hours
+    
+
+Command line uploads
+    
+    gcloud
+        single file upload
+            gcloud storage cp [LOCAL_FILE] gs://[BUCKET_NAME]/
+
+        directory upload
+            gcloud storage cp -r [DIRECTORY] gs://[BUCKET_NAME]/
+    
+    gsutil
+        single file upload
+            gsutil cp [LOCAL_FILE] gs://[BUCKET_NAME]/
+
+        directory upload
+            gsutil cp -r [DIRECTORY] gs://[BUCKET_NAME]/
+
+
+Partitioning files during upload
+
+    partitioning large files into smaller segments and using concurrent transfer/upload jobs can help it go more quickly
+
+    gsutil, gcloud, or Storage Transffer Service
+
+    gsutil as a parallel composite uploads feature which automatically breaks larger files into smaller parts
+        and uploads them in parallel
+
+    `gsutil -o "GSUtil:parallel_composite_upload_threshold=100M" cp large_file.csv gs://your-bucket`
+
+
+Compression and Decompressive Transcoding
+
+    Compressing files (such as with GZIP) can help reduce transfer time and storage costs
+
+    usually not necessary, but an option for very cost-sensitive use cases
+
+    Decompressive Transcoding
+        Cloud Storage automatically decompresses gzip-compressed files when serving them, 
+            while still storing them in their compressed form
+    
+        Cost savings of compressed storage without affecting the end user experience
+
+Expired source credentials during transfer
+    
+during long-running data transfers, you may encounter 403 errors ("forbidden")
+    credentials no longer working, temporary access tokens likely expired
+
+    solution: 
+    regenerate the credentials, extend their longevity if possible
+    split the transfer job into smaller chunks if possible
+
+
+-------------------------------
+-- Integration with other GCP Services
+-------------------------------
+
+Cloud Storage Notifications
+    - when an object is uploaded or changed, it can be set up to generate Cloud Storage Notification
+    - Cloud Storage Notifications can then trigger other processes in GCP
+
+    Other availalbe triggers:
+        Object deleted
+        Object metadata updated
+        Object Archived
+
+Triggering a Composer DAG
+    - Object uploaded to storage bucket
+    - Object creation triggers Cloud Function
+    - Cloud Function runs its script, calls Airflow API to trigger Composer DAG to process new data
+
+
+Dynamic Component of other services
+
+    Dataflow
+        - GCP buckets can be input or output of Dataflow pipelines
+
+    Dataproc
+        - Storage layer for Apache Spark/Hadoop jobs, replacing HDFS
+
+    BigQuery
+        - create external tables in BigQuery based on data in GCS
