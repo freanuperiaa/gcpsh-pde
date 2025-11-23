@@ -2,13 +2,223 @@
 -- BigQuery Intro
 -------------------------------
 
+BigQuery is a fully-managed and serverless relational database
+great for both storage and analysis, able to autoscale storage and compute
+accepts batch and streaming tools
 
 
+-------------------------------
+-- Importing data to BigQuery
+-------------------------------
+
+Web UI Imports
+    - Local uploads, GCS, Drive, BigTable, Azure Blob
+    - Specify file types: csv, json, avro, parquet
+    - can adjust schema and table settings during the import
 
 
+Uploads with bq command-line tool
+    - upload local files using command line
+    - faster for repetitive tasks and large data operations vs manual uploads
+        e.g. bq load --source_format=CSV dataset_id.table_id ./local_file.csv
 
 
+BigQuery Data Transfer Service
+
+managed service that automates data integration into BigQuery
+
+    Google Services (Google Ads, Youtube) - transfer marketing & Ads data to BQ
+
+    SaaS Apps - servicenow, salesforce, etc
+
+    External Databases (via JDBC) - 
+
+    Cloud Storage Services - from AWS S3, Azure Blob Storage, etc
+
+BQ Data Transfer Service also has scheduled transfers
+    this automates the process of keeping your BQ datasets up to date by recurring uploads
 
 
+BQ Streaming API & Storage Write API
 
+(in exam, you may have to choose between BigQuery Streaming API vs BigQuery Storage Write API)
+
+BigQuery Streaming API
+    - at-least-once delivery (possible duplicates)
+    - lower throughput, lower latency
+    - pick this if you value immediate availability is more important than accuracy
+
+Storage Write API
+     - exactly once delivery
+     - higher throughput, higher latency
+
+
+Apache Hive
+    - Apache Hive data (parquet, avro, ORC) can be easily loaded into BigQuery
+    - can do this to optimize storage and processing
+    - also kept in Cloud Storage and queried from BigQuery as an external table
+
+
+Teradata imports
+    - typically use JDBC and FastExport (in Teradata)
+    - FastExport is Teradata's high-speed tool for exporting large data volumes efficiently
+
+
+Including an ingestion timestamp
+    by including an ingestion timestamp on each record, you can maintain a historical view of data by
+    tracking when each change occurred, which simplifies querying for both current and past data
+
+
+ETL and Data Preparation
+
+common tools for comparing data and loading it into BigQuery:
+    Dataflow - pipelines to transform data
+             - Common export to BigQuery
+    Dataprep by Trifacta
+             - no-code UI to clean and transform data
+             - can export directly to BigQuery
+
+
+-------------------------------
+-- Spark-BigQuery Connector
+-------------------------------
+
+Spark-BigQuery Connector enables integration between Apache Spark (usually running in Dataproc) and BigQuery
+Allows Spark jobs to directly query or write data to BigQuery, 
+    enabling flexible data processing pipelines that can leverage both Spark and SQL
+
+
+-------------------------------
+-- External Tables and Federated Queries
+-------------------------------
+
+External tables
+    - you can create external tables (and query them) in BigQuery for data that is stored in CloudStorage
+    - key advantage to this is you dont have to move data to BigQuery (having to make a pipeline) 
+    - can also read data from BigTable and Google Drive
+
+Federated Queries
+    - Query other GCP databases and retrieve results as a temporary table in BigQuery
+        .- Spanner
+        .- Cloud SQL
+        .- AlloyDB
+    - moving original data to BigQuery not needed
+    - declare EXTERNAL_QUERY function in your query, and use source database's SQL dialect
+
+
+-------------------------------
+-- Dataset Configuration
+-------------------------------
+
+Regional vs Multiregional Configurations
+    In BQ, location is configured at dataset level
+
+    Regional
+        - low latency, high throughput
+        - cost efficient
+        - good if you have data residency requirements or workloads in same region
+    Multi-regional
+        - high availability, fault-tolerant
+        - disaster recovery ready
+
+Expiration settings
+    dataset expiration: set a default expiration time for all tables created in the dataset
+    table-level override: specify expiration for individual tables
+
+Data Encryption
+    Google-Managed Encryption (default) - BQ automatically encrypts data. Keys managed by Google. rotated regularly
+    Customer-Managed Encryption Keys - use Cloud Key Management Service (KMS) to create and manage keys
+
+    ^ can also be configured at the table level
+    if configured at the dataset level, 
+        then when data is copied between tables, any data copied will inherit encryption settings
+
+
+-------------------------------
+-- Backing up data
+-------------------------------
+
+Data for multi-region datasets is automatically replicated across multiple locations
+    (e.g. United States, Europe, parts of Asia)
+    ensures high availability and durability in case of disaster or failure, 
+        but not designed for recovering from user errors (like accidentally deleting)
+
+
+Time travel feature
+    allows you to view and query the state of a table from any point within the last 7 days
+    perform a point-in-time query (query the table as if it was a specific time)
+    use snapshot decorator (FOR SYSTEM TIME AS OF)
+    provides the lowest RPO (almost zero)
+
+
+BigQuery Snapshots
+    manual on-demand way to create backup at a specific point in time
+    useful for long-term archive beyond the 7-day time travel window
+
+
+Data Exports to GCS
+    you can also export data to Cloud Storage as a form of backup, with formats like CSV, JSON, and Avro
+    backups in GCS are **generally cheaper** than storing data in BQ, 
+                but still depends in storage class and retrieval patterns
+
+
+Rectifying errors from time-partitioned backups
+    time-partitioned tables divide data by specific time frames (day, week)
+    you can back up these time partitions
+        if an error occurs, restore or analyze only the affected time and partition
+
+    this cuts unnecessary work, and makes it easier to resolve errors by focusing on specific time frames
+
+
+-------------------------------
+-- Referential Integrity
+-------------------------------
+
+Relational databases are built in the idea that data should be organized into tables, where each table
+    holds data about a specific entity (employee, department, etc)
+A relational database models relationships between real-world entities by connecting data across the tables
+    using keys, organizing data meaningfully and coherently
+
+The principle of avoiding orphaned records is called referential integrity.
+
+Referential integrity is the principle foreign key values **must always correspond** to valid entries
+    in the parent table, ensureing data consistency across tables
+
+
+-------------------------------
+-- Normalization and Denormalization
+-------------------------------
+
+Database Normalization
+    process of structuring a database to reduce redundancy and improve data integrity by dividing 
+    data into smaller, related tables
+
+    while normalization improves data integrity and reduces redundancy, it can introduce 
+    performance overhead during queries (e.g. need to JOIN)
+
+
+Denormalization
+    the process of reversing some of the normalization by combining related tables into one table
+    to reduce the need for complex JOINs
+
+    good for reporting, or when youre making a table that is frequently used in your ETLs
+
+
+BigQuery encourages denormalization to improve cost and performance!
+    BigQuery uses columnar storage, which scans data more efficiently. This reduces the need for JOIN operations
+
+BigQuery also allows the use of *nested tables* and repeated fields to store complex data structures
+    within a single table. 
+    These nested data are called RECORD/STRUCT datatype. Use UNNEST to flatten/normalize nested data
+
+
+When to choose: Normalization vs DeNormalization
+
+Normalization:
+    - when data integrity and update efficiency are more important than query speed
+    - systems where maintaining consistent, accurate data is priority
+
+Denormalization:
+    - when query performance is primary concern (mainly analytics use cases)
+    - read-heavy systems with large datasets where JOINs are bottleneck
 
