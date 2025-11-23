@@ -1,0 +1,36 @@
+-------------------------------
+-- Bigtable Intro
+-------------------------------
+
+Bigtable is a high-performance massively scalable NoSQL database
+designed for large analytical and operational workloads
+good for high throughput data that needs atomicity
+managed, but not no-ops. you have to configure the instances etc.
+
+command line tools
+    interact with Bigtable data via:
+        cbt (Cloud Bigtable Tool)
+        HBase shell
+
+    gcloud - used for managing the BigTable service (i.e. instances, tables, clusters)
+
+
+-------------------------------
+-- Use Cases
+-------------------------------
+
+- Bigtable use cases
+    time series data storage (lots of writes per second, sometimes with few columns e.g. stock data)
+    geospatial data storage
+    real-time content recommendations
+    IoT sensor data ingestion
+
+- "Tall and Narrow" tables
+    Bigtable is good for tall and narrow tables, large number of rows but relatively few columns
+    often seen in use cases that involve high-throughput analytics like stock data, time-series data
+    efficient for "needle in a haystack" operations, like reading or writing a specific value within a massive dataset
+        - e.g., quickly locating a specific stock price within a years' worth of stock data
+
+
+
+
