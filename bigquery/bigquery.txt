@@ -222,3 +222,351 @@ Denormalization:
     - when query performance is primary concern (mainly analytics use cases)
     - read-heavy systems with large datasets where JOINs are bottleneck
 
+
+-------------------------------
+-- Table Partitioning
+-------------------------------
+
+Partitioning 
+    - splits a table into smaller pieces, called partitions, based on a specific criteria
+    - you can partition by timestamps, ingestion time, or integer ranges
+    - this reduces the amount of data being scanned, improving performance and lowering query costs
+
+partition expirations
+    - allow you to automatically delete partitions once they reach the expiration age
+        e.g. set a partition exp of 90 days to always keep data for the last 90 days in a daily partitioned table
+    - in contrast with table expiration, which removes the entire table
+
+
+-------------------------------
+-- DDL Operations
+-------------------------------
+
+DDL (Data Definition Language) focuses on defining, modifying, and removing the structure of your db objects
+    (in contrast with DML, Data Manipulation Language, which deals with data itself e.g. UPDATE)
+
+Common DDL Commands
+
+    CREATE - create db objects like tables, views, indexes
+    ALTER - modifies existing db objects (add a column to a table)
+    TRUNCATE - removes all data from a table but keeps the structure
+    DROP - deletes db object
+
+
+*you can use DDL to partition tables*
+    CREATE TABLE logs.log_events (
+        id INT64,
+        event_name STRING,
+        event_timestamp TIMESTAMP
+    )
+    PARTITION BY DATE(event_timestamp);
+
+
+-------------------------------
+-- DML Operations
+-------------------------------
+
+focuses on querying and modifying the data within database objects
+deals with data itself - insert, update, delete, retrieve records
+
+Common DML Commands
+
+    INSERT
+    UPDATE
+    DELETE
+    MERGE - synchronizes data by inserting, updating, or deleting
+
+
+INSERT vs UPDATE
+    you may be asked about a situation where either choice could work, but
+    you have to choose the best
+
+    INSERT is more efficient for continuously logging new data 
+        (simpler operation, no need to search and modify existing records)
+
+    UPDATE is less efficient when applied frequently in tables that grow quickly
+        Additionally, for time-series, could lead to loss of historical data
+
+
+DML Quotas
+
+performing too many DML operations in a day is one potential cause of quotaExceeded error
+you cannot increase this quota
+
+to avoid, use MERGE. This processes changes at once, rather than on a record-by-record basis
+    must transfer the data into a new table, and then perform the merge
+
+
+-------------------------------
+-- Advanced Query Management
+-------------------------------
+
+Standard views
+    - virtual table representing the result of a query. Don't actually store data
+    - requires computation each time it is accessed
+    
+    - choose over materialized views when:
+        .- real-time reflection, up-to-date data is required
+        .- query is accessed infrequently
+        .- query computation size is low
+        .- storage costs for materialized views are high
+
+Materialized views
+    - pre-computed and cached query results
+    - most cost-effective solution for frequently-accessed data
+    - reduces computational charges associated with on-the-fly query executions
+        (
+            let's say you have a CTE that is frequently done with your other pipelines,
+            materializing that would reduce computational charges
+        )
+
+    - choose over standard views when:
+        .- real-time data reflection is not required
+        .- query is accessed frequently
+        .- query computation size is high
+
+Authorized views
+    - security mechanism that allows users to query specific data 
+        without giving them access to the underlying tables
+    - restrict access tosensitive data while sharing only the results of a defined queries
+    - controls data visibility and enhance security in multi-user environments
+
+Saved queries
+    - predefined queries that you can save, share with others, and execute on demand
+
+Scheduled queries
+    - run SQL queries on a recurring basis
+    - good for generating reports that need to be updated regularly, like daily
+
+User-Defined Functions (UDF)
+    - allows you to write custom functions using JavaScript or SQL which can then be called
+        in your SQL queries
+    - useful when dealing with complex data processing tasks which cannot be easily accomplished
+        with built-in SQL functions or RegEx
+
+
+-------------------------------
+-- Storage Types
+-------------------------------
+
+Active and Long-term Storage in BigQuery
+
+    when you import/create a table in BQ, it is automatically placed in *Active Storage*
+    when that table is not accessed/modified in the next 90 days, it is transitioned to *Long-Term Storage*
+    if the table in Long-Term Storage is accessed again, it goes back to Active Storage again
+
+    ! This also applies to individual partitions of a table !
+        partitions not being accessed can be moved to Long-Term Storage. If queried again, will be Active Storage
+
+
+Cost Comparison to Cloud Storage
+
+    Active Storage in BQ ~ roughly comparable to ~ GCS Standard Class
+    Long-Term Storage in BQ ~ roughly comparable to ~ GCS Nearline Class
+
+if you have data you won't access for years, it's better to move to move them in GCS Coldline/Archive class buckets
+
+
+-------------------------------
+-- Compute Cost Management
+-------------------------------
+
+How youre charged for queries
+    when performing queries, you are only charged for *bytes read during query execution*
+
+You are charged for data storage (Active and Long-Term), but is separate from running queries
+
+Estimating size of query
+    - perform *dry run* of query if using the bq command line tool
+    - preview the number of bytes in a query if using the BQ query editor
+
+BigQuery Slots
+    - unit of compute used to execute BQ queries
+    - automatically and dynamically assigned
+    - pricing options for slots:
+        .- on-demand (default) (soft cap of 2000 slots for on demand processing)
+        .- capacity-based
+    
+BigQuery Pricing Models
+
+On-Demand Pricing
+    - pay-per-query based on amount of data processed
+    - good for ad-hoc analytics, variable workloads
+
+Capacity-Based Pricing
+    - slot-hours are reserved in advance
+    - dedicated or autoscaling
+    - best for large, predictable workloads and long-term commitments(1, 3 yrs)
+    - allows centralized slot management for entire organization
+
+    Capacity-Based Pricing Models
+        Standard
+            - basically on-demand pricing, but unit is slot hours instead of bytes read
+            - autoscaling up to 1600 slots
+            - no baseline slots (only autoscaling), no commitment plans (pay-as-you-go)
+            - medium predictability workloads, 99.9% SLO (availability guarantee)
+
+        Enterprise
+            - Baseline + autoscaling slots for more control
+            - Higher capacity (quota-based, can request increases)
+            - commitment plans (1yr, 3yr)
+            - 99.99% SLO (higher availability and reliability)
+
+Monitoring slot usage
+
+you can use Cloud Monitoring to track usage
+    slots/allocated - slot usage by project, reservation, and job type
+    slots/allocated_for_project - slot usage for the entire project
+    slots/allocated_for_project_and_job_type - usage by proj and job type
+    slots/allocated_for_reservation - usage by proj in a reservation
+
+Query Quotas
+    - set custom quotas on the number of bytes read or number of queries run in BQ
+    - can be project level or principal level
+    - prevent accidental overspending
+    - ensure fair resource usage among users
+
+Compute Cost Management Strategies
+
+    - combine pricing models
+        mixed approach: capacity-based for predictable workloads and on-demand for ad-hoc queries
+        assign specific queries to slots
+
+        example: reservations (of slots) for production queries, on-demand pricing for analytics queries
+
+    - set query quotas
+        - # of queries or bytes
+        - project or principal
+
+    - monitor and adjust usage
+        - regularly review org's usage, adjust reservations, quotas, (and if possible, workflows) accordingly
+        - use Cloud Monitoring and BQ's built-in tools
+
+
+-------------------------------
+-- Logs
+-------------------------------
+
+Integration with Cloud Logging
+    all activites and operations performed in BigQuery, whether by users or services, 
+    are logged in Cloud Logging under the "BigQuery" resource type
+
+    Admin Activity Logs
+        configuration and mgmt of BQ resources (dataset creation, schema change)
+    Data Access Logs
+        read/write to bigquery tables
+        important for tracking specific data ingestion jobs
+    System Event Logs
+        system's automatic operations (resource allocation, maintenance, etc)
+
+
+identifying logs by a specific Job ID
+
+    resource.type="bigquery_resource"
+    logName="projects/<my-unique-projectid>/logs/cloudaudit.googleapis.com%2Factivity"
+    protoPayload.methodName="jobservice.jobcompleted"
+
+
+-------------------------------
+-- Admin Console
+-------------------------------
+
+resource utilization and jobs monitoring
+slot capacity management
+policy tag taxonomies
+query the INFORMATION_SCHEMA to get a sense of job performance
+
+viewing errors related to jobs
+    BQ interface allows you to view job errors
+    Jobs Explorer isthe first place to look if a job fails
+
+quotaExceeded error
+    if you receive quotaExceeded error:
+        - identify the specific quota limit exceeded by checking the error details
+        - review current quota usage in GCP console
+        - leverage the INFORMATION_SCHEMA views to monitor recent jobs, resource usage, etc
+
+
+-------------------------------
+-- IAM
+-------------------------------
+
+BigQuery Admin - full control over BQ resources
+                - can be granted at Project, Dataset, Row, Table, View
+
+BigQuery User - create datasets, manage jobs
+                - can be granted at Project, Dataset
+
+BigQuery Data Owner - manage and share datasets/views
+                - can be granted at Project, Dataset
+
+BigQuery Data Editor - create, modify, delete table data
+                - can be granted at Project, Dataset, table, view
+
+BigQuery Data Viewer - read-only access to tables/views
+                - can be granted at Project, Dataset, table, view
+
+BigQuery Job User - run jobs and queries
+                - can be granted at Project
+
+BigQuery Metadata Viwer - access dataset/table metadata
+                - can be granted at Project, Dataset, table, view
+
+
+Team-Specific Datasets
+    Organize users into Google Groups based on teams or departments
+    assign IAM roles to these groups rather than individual users for easier management
+
+    each team or group is given edit access only to their designated dataset
+        and view access to other datasets
+
+
+-------------------------------
+-- Best Practices
+-------------------------------
+
+- Query Best Practices
+
+    .- instead of using `SELECT *`, specify your columns
+
+    .- pay attention to the size of the query before running it
+
+    .- LIMIT & HAVING do not filter the data before scanning (unlike WHERE),
+        therefore not reducing costs
+
+    .- establish the logic of your query on small subsets of your data first
+
+    .- save intermediate tables and query those instead of repeatedly querying original table
+
+    .- when joining tables, use INNER JOIN instead of WHERE
+        Using WHERE creates more variable combinations, more computation needed
+
+- Data Ingest and Storage Best Practices
+
+    .- streaming ingest is expensive
+    .- more, smaller tables (esp through partitioning) allow you to optimize storage costs
+                BUT balance with reducing need for JOINs
+    .- nested (denormalized) tables reduce need for costly joins and improve query performance
+    .- use expiration settings on datasets, tables, and partitions
+    .- leverage long-term storage where possible (it applies to partitions too)
+
+
+-------------------------------
+-- Looker Studio
+-------------------------------
+
+Visualizing BQ results in Looker Studio
+    results generated in BQ can be immediately explored with Looker Studio
+    Alternatively, set up BQ tables as data sources in Looker Studio and write queries/views in Looker Studio UI
+
+Looker Studio vs Looker
+
+    Looker Studio
+        - free tool, anyone with GCP access
+        - data viz and reporting
+        - limited customization
+    Looker
+        - paid enterprise edition
+        - advanced BI/Analytics
+        - highly customizable
+
