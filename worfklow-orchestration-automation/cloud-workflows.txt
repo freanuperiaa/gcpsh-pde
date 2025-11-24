@@ -1,0 +1,33 @@
+-------------------------------
+-- Cloud Workflows
+-------------------------------
+
+fully-managed service that allows you to orchestrate and automate execution of GCP services and 
+HTTP-based APIs in a reliable, scalable, and serverless manner
+
+enables sequencing and execution of multiple cloud tasks
+
+built-in mechanisms for managing failures and retries
+
+offers a visual graphical interface for workflow creation and monitoring
+
+
+Workflows vs Functions vs Composer
+
+Cloud Workflows
+    - use for microservices orchestration
+    - serverless, low latency
+    - simple workflows
+    - YAML config
+
+Cloud Functions
+    - event-driven tasks
+    - serverless, small, focused functions
+    - rapid development
+    - various programming languages (Python, JS, etc)
+
+Composer
+    - data pipelines for complex logic
+    - batchjobs
+    - python config + dev
+    - orchestrating multi cloud

@@ -1,0 +1,38 @@
+-------------------------------
+-- Cloud Functions
+-------------------------------
+
+most abstracted and lightweight of GCP's compute services
+serverless execution env
+event-driven code
+automatic scaling (limits on execution time and memory/CPU)
+GCP version of AWS Lambda
+
+*Gemini*
+Cloud Run is a serverless platform for running stateless containers, making it suitable for 
+full applications, APIs, and longer-running services, while Cloud Functions is ideal for event-driven, 
+short-lived functions triggered by specific events, though Google is merging Cloud Functions into Cloud Run. 
+Key differences are Cloud Run's support for any language and the ability to handle multiple requests per instance, 
+versus Cloud Functions' single-request-per-instance limit and event-specific triggers. 
+
+Use Cases
+
+- execute code automatically in response to specific events
+- creating lightweight APIs
+- cost is a consideration + sporadic workloads/microservice architectures
+- code development focus (no need to care about ops)
+
+Types of Triggers
+
+remember that Cloud Function is event-driven
+
+Triggered by various sources
+    - changes in Cloud Storage
+    - New messages in Pub/Sub
+    - HTTP requests
+
+
+
+
+
+

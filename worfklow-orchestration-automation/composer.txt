@@ -1,0 +1,137 @@
+-------------------------------
+-- Cloud Composer Intro
+-------------------------------
+
+Composer is the managed implementation of Airflow
+    GCP handles much of infrastructure and maintenance, 
+        but you still have to configure some things (e.g. scaling parameters)
+
+DAG - Directed Acyclic Graph
+    - collection of tasks you want to run, organized in a way that reflects dependencies
+
+
+-------------------------------
+-- APIs
+-------------------------------
+
+Cloud Composer API vs Airflow REST API
+
+you may be asked a question on the exam, deciding between Composer vs Airflow API for a given task
+
+    Composer API    
+        - used for managing Composer Environment (infrastructure)
+        - e.g. create a new composer Environment, update version, scale workers
+
+    Airflow REST API
+        - manage airflow and the actual pipelines
+        - e.g. trigger DAGs, monitor runs, manage tasks (you know this, you retrieve taskInstances and DagRuns via API)
+
+
+-------------------------------
+-- Architecture
+-------------------------------
+
+Composer is a combination of:
+
+Apache Airflow + Google Kubernetes Engine + Cloud Storage
+
+Airflow
+    - provides the software framework for defining, scheduling, and monitoring workflows (DAGs)
+
+GKE
+    - GKE clusters manage the containers that Composer runs Airflow in
+    - it's the GKE cluster that adds/subtracts nodes to run that will perform the work described in the DAGs
+
+GCS
+    - GCS stores DAG files, logs, and configuration files
+    - Composer reads the files from GCS
+
+
+-------------------------------
+-- Triggering Pipelines
+-------------------------------
+
+Ways to trigger a DAG
+    scheduled - airflow uses CRON notation, any interval can be specified
+    programmatically - Cloud Functions, trigger upon new data ingest (Airflow REST API)
+    manually, on-demand - on Airflow UI, "Trigger DAG" button
+
+
+-------------------------------
+-- Orchestrating other Services
+-------------------------------
+
+Orchestrating steps of a workflow in other GCP services
+
+- ensure DF job starts only after previous BigQuery task has successfully completed
+- transfer data to BQ from GCS at regular intervals
+- automating retries for tasks across services
+- launch model training on Vertex AI after data ingestion completes
+
+Multi-cloud
+    Airflow as prebuilt operators for a number of providers such as AWS and Azure
+    e.g. orchestrate dependencies between S3 transfer in AWS, VM job in Azure, BQ task in GCP
+
+
+-------------------------------
+-- Airflow Task Management
+-------------------------------
+
+callbacks: handling task successes and failures
+    on_failure_callback - triggers custom function when task fails
+                        - useful for sending alerts, retrying workflows
+    on_success_callback - triggers custom function when task fails
+                        - useful for logging success events, triggering downstream tasks
+
+    Combine and integrate with Cloud Monitoring
+    on_failure_callback - for failure alerts across workflows
+    on_success_callback - to log successes and track performance in dashboards
+
+BigQuery Operators
+    - can execute jobs/queries, manage datasets & tables, validate data
+    - *BigQueryInsertJobOperator* is one type of BQ Operator that allows you to execute various BQ jobs,
+                                  such as querying, loading data, and exporting data
+
+Email_On_Failure
+    - DAG parameter
+    - if set to True, an email will be sent to the recipients defined in the 'email' argument 
+        whenever the task fails
+
+Retries
+    - can be added to any Airflow tasks
+    - can configure num of retries
+    - good for temporary issues like network latency or transient errors
+    - retry_delay = how long to wait between retries
+
+Notifications with a third party service
+    When a third party service (e.g. external API or another cloud platform) is used in your pipelines,
+    and you want to be notified each time it is invoked:
+        log an event in Cloud Logging and configure a metric in Cloud Monitoring that tracks the logs
+
+    ```
+        import google.cloud.logging
+        from google.cloud.logging import Client
+
+        # init the Google Cloud Logging client
+        client = Client()
+        logger = client.logger("third_party_task_logger")
+
+        def log_third_party_task(**kwargs):
+            logger.log_text(f"Task {kwargs["task_instance].task_id} invoked.")
+    ```
+
+
+-------------------------------
+-- Airflow IAM
+-------------------------------
+
+IAM roles to know
+
+Composer Admin - full control over creating, updating, and managing Composer envs
+Composer Developer - allows users to deploy, modify, and manage DAGs within Composer envs
+Composer Viewer - read-only access to view Composer envs and configs
+Composer User - run and schedule DAGs without modifying the environment
+Composer Environment and Storage Accessor - access GCS buckets for Composer envs to manage DAGs, logs, files, etc
+Composer Worker - permissions to run a Composer environment VM. for service accounts
+
+
