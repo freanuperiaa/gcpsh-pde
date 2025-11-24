@@ -32,5 +32,135 @@ command line tools
         - e.g., quickly locating a specific stock price within a years' worth of stock data
 
 
+-------------------------------
+-- BigTable Instance types
+-------------------------------
+
+Instance types
+    Development
+        - single node
+        - low cost
+        - no replication, no throughput guarantee
+
+    Production
+        - 1+ clusters, 3+ nodes per cluster
+        - replication available, throughput guarantee
+
+Storage Type
+    - HDD or SSD
+    - SSD is almost always the right choice unless storing 
+        >10TB of infrequently-accessed data and latency is not a concern
+
+Cluster Location
+    - choose a location for each cluster (can't be changed once picked)
+    - Bigtable clusters are zonal resources (they exist within a GCP zone)
+        if a zone becomes unavailable, all resources in that zone including Bigtable will be unavailable
+    - to reduce latency and improve availability, 
+        store your data close to the users and services that frequently access it
+    - consider having multiple clusters in different zones for replication (all as part of a Bigtable instance)
+
+Scaling (horizontal)
+    manual scaling
+        - manually add nodes to your Cluster. each node handles portion of your data
+        - improve write throughput and overall performance
+        - by adding more nodes, you can manage higher traffic and more concurrent writes
+
+    automatic scaling
+        - specify the minimum and maximum nodes allowed in cluster (hard limits)
+        - set target CPU and storage utilization
+        - Bigtable monitor the cluster's actual util
+
+
+-------------------------------
+-- Schema and Row Key Design
+-------------------------------
+
+Introduction to Bigtable Schema
+
+    * remember that Bigtable is NoSQL, but it has its ways to structure its data. 
+    In Bigtable, you dont need to have data in every column for every record/row*
+
+    column families group column together, allowing for efficient data retrieval and storage
+    columns exist within column families, but the specific columns are defined dynamically by the data written
+    (i.e., columns used by each row do not need to be the same)
+        Bigtable tables are "sparse", meaning empty cells don't cost any storage
+
+    *Row Keys* are the unique identifiers for each row
+    only the row key is indexed in bigtable, so its design greatly affects access patterns, and therefore performance
+
+Hotspotting
+    is a bottleneck that occurs when a disproportionate number of requests are being sent
+    to a subset of the cluster because the row key design did not evenly distribute the data
+    across the cluster
+
+    common culprits: sequential numbers, timestamps
+    
+Row Key best practices (prevent hotspotting)
+    - reverse domain names (com.mywebsite.www)
+    - timestamps at the end of the row key, or reversed (sensor8102#20251124T20000Z)
+    - string identifiers (AAPL) they are unique and do not follow a sequential pattern
+
+Row key signs to avoid
+    - domain names (unreversed)
+    - sequential numbers
+    - keys that need to be updated frequently (user123_balance_1500)
+
+Salting
+    - adds a random prefix to row keys to uniformly spread data across nodes, which helps prevent hotspotting
+    - this adds an overhead when writing since you will have to add processing to rowkey
+    - makes range queries more difficult because the added prefixes disrupt the natural ordering of row keys.
+        .- as a result, querying a contiguous range requires scanning and filtering multiple non-adjacent keys
+            instad of a single sequential block
+
+Field Promotion
+    - moving important column data to be part of the row key can enhance query performance, as only the
+        row key is indexed
+    - reduces the need for full table scans
+    - mUst be thoroughly planned to balance read optimization and write performance
+
+Bigtable key visualizer
+    *Gemini*
+        is a diagnostic tool that helps users analyze and understand the usage patterns of their Bigtable tables. 
+        It provides visual reports, primarily in the form of heatmaps
+    
+    it is showed in the lesson, row-key prefixes are shown on the left, and a heatmap is the main chart. 
+        purple is few or no operations, red/yellow signifies heavy read/write activity
+
+    - in the exam, there might be a scenario where performance issues arise
+        and the answer might be to use the Key Visualizer to identify bottlenecks in the row space
+    
+
+-------------------------------
+-- Garbage Collection Policies
+-------------------------------
+
+*Gemini*
+    In Bigtable, a cell represents a single, timestamped version of data at the intersection of a specific row and column.
+
+garbage collection rules define whether/how to automatically delete old or unwanted data from your tables
+based on time, versions, or a combination
+defined at the column family level, applied at the cell level
+
+Types of Garbage Colln Policies
+    Max Versions 
+        - retains only the specified maximum number of versions of each cell
+        - e.g. if max=3, only the 3 most recent versions of the cell are maintained
+
+    Max Age
+        - retains data based on the age of the cell versions
+        - e.g. if max age is 30 days, any cell version older than 30 days is deleted
+
+
+-------------------------------
+-- Detailed Logging
+-------------------------------
+
+you may occasionally need more logging info than the Bigtable console provides
+
+go to Logs Explorer and filter to
+    resource.type = "bigtable_instance"
+
+
+
 
 
