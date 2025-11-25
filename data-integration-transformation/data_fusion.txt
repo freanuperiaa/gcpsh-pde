@@ -1,0 +1,39 @@
+-------------------------------
+-- Data Fusion - Intro
+-------------------------------
+
+fully managed data integration service for quickly building and managing data pipelines
+a point-and-click UI to transform data
+can connect to other clouds, SaaS products, and on-prem systems
+
+essentially a no-code ETL/ELT tool
+
+
+-------------------------------
+-- Wrangler
+-------------------------------
+
+code-free tool for exploring and transforming data
+
+sources:
+    BigQuery
+    Cloud SQL
+    GCS
+    Kafka
+    Oracle
+    Cloud Spanner
+
+use cases:
+
+    - transformations that have to be automated and scheduled to run repeatedly
+    - transformations for various data formats, including structured data such as phone numbers and email addresses
+    - standardizing inconsistent data formats that are not following company standards
+
+
+-------------------------------
+-- Encryption
+-------------------------------
+
+you will be prompted to choose either Cloud KMS keys for Google-managed keys 
+during Data Fusion instance setup
+

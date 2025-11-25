@@ -1,0 +1,170 @@
+-------------------------------
+-- Datastream overview
+-------------------------------
+
+fully-managed serverless CDC (Change Data Capture) and data replication tool
+if you have an on-prem database that you want to replicate to GCP, Datastream is a good choice
+    e.g. on-prem Oracle database replication to BigQuery
+
+sources:
+    Oracle
+    PostgreSQL
+    SQL Server
+    MySQL
+
+if you see a question in the exam where the scenario is to replicate or do CDC
+from one of ^these databases, Datastream is most likely the answer
+
+
+-------------------------------
+-- Dataform overview
+-------------------------------
+
+for managing and automating SQL-based data transformations
+
+key features:
+    SQL-based data transformations
+    version control integration
+    workflow automation
+
+aims to provide a collaborative environment for teams
+
+seamless integration with BigQuery
+
+- ELT with Dataform
+    - dataform is optimized for ELT workflows, where data is transformed 
+        after being loaded into data warehouses like BQ
+    
+    - if you need FULL ETL functionality, other tools like Dataflow may be better suited
+
+    *in the exam* look out for Dataform in questions where ELT is mentioned
+
+- Assertions
+    - a feature of Dataform used to validate data quality in the pipeline
+    - can automatically check for conditions like uniqueness, null values, and other data integrity rules
+
+
+-------------------------------
+-- Dataprep overview
+-------------------------------
+
+- user-friendly, code-free interface for visually exploring, cleaning, and preparing data
+- automatic data schema detection and pattern recognition for data cleansing and transformation
+- accelerates data preparation processes, ensures data quality
+- ideal for preparing raw data for analytics, machine learning, and business intelligence
+- seamless integration with BigQuery and other GCP data services
+
+- Common workflow:
+
+    1. prepare data in Dataprep
+    2. export it to BigQuery
+    3a. Connected Sheets - pull data from BQ to Google Sheets
+    3b. Looker Studio - create detailed dashboards, advanced visualization
+
+*exam tip* strongly consider choosing Dataprep when the question mentions data exploration
+           or preparation by users who prefer not to code
+
+
+
+** ChatGPT suggestion **
+
+When to Choose Each GCP Tool (Cheat Sheet)
+1. Datastream — choose when the question is about:
+
+    ✔ Change Data Capture (CDC)
+        Real-time replication from OLTP → GCP
+        Minimizing CDC lag
+        Streaming insert into BigQuery or Cloud Storage
+        Keeping source database & warehouse in sync
+
+    ✔ Replicating from specific databases
+        Oracle, PostgreSQL, MySQL, SQL Server
+        → If the exam mentions these + replication = Datastream
+
+    Use Case Pattern
+    On-prem DB → Datastream → BigQuery → downstream transformations
+
+    Do NOT choose Datastream when:
+    Data must be transformed significantly → use Dataflow or Dataform
+    The source isn't CDC-capable
+    Batch ingestion is fine → use Data Transfer Service or Storage Transfer Service
+
+
+2. Dataform — choose when the question is about:
+
+    ✔ ELT in BigQuery
+        Transform data after loading into BigQuery
+        SQL-based workflows
+        Modeling data warehouses (like dbt)
+        Creating models, views, table dependencies
+        Automated SQL pipelines, versioning, CI/CD
+
+    ✔ Data Quality via Assertions
+        Checking nulls, duplicates, wrong values
+        Validating schema expectations
+        Patterns
+        “Team collaboration,” “SQL modeling,” “ELT,” “data lineage”
+
+    Do NOT choose Dataform when:
+        You need Python/Java transformations → choose Dataflow
+        You need heavy compute or custom machine-learning ETL
+        You need low-latency streaming → choose Dataflow
+
+
+3. Dataprep — choose when the question is about:
+
+    ✔ No-code data cleaning
+        Business analysts / non-engineers
+        Visual data cleaning
+        Data exploration
+        Data profiling / anomaly detection
+
+    ✔ Preparing data before analytics
+        Making raw data usable
+        Quick fixes without writing SQL or Python
+        Integrating with BQ or Looker Studio
+        Patterns
+        “Interactive UI,” “visually prepare data,” “no code,” “data wrangling”
+
+    Do NOT choose Dataprep when:
+        Automated production pipelines are needed → choose Dataflow or Dataform
+        Heavy transformation using programming languages
+        Million-row-scale streaming
+
+
+4. Data Fusion — choose when the question is about:
+
+    ✔ Full ETL (Extract → Transform → Load) with a graphical UI
+        Built on Apache NiFi + CDAP
+        Drag-and-drop data pipelines
+        Connect various systems
+        Managed service for visual ETL
+
+    ✔ Integrating multiple systems
+        On-prem + cloud
+        FTP servers
+        APIs
+        JDBC data sources
+        Legacy systems
+
+    ✔ Batch or streaming ETL pipelines
+        But still simpler than writing custom Dataflow code
+        Patterns
+        “Visual ETL,” “integrate many sources,” “batch + streaming,” “enterprise ETL”
+
+    Do NOT choose Data Fusion when:
+        You just need ELT (BQ SQL models) → Dataform
+        You need no-code data prep for analysts → Dataprep
+        You need real-time CDC replication → Datastream
+        You require custom code pipelines → Dataflow
+
+
+Requirement / Scenario	Choose
+Real-time CDC, DB replication	                            --->            Datastream
+SQL-based ELT inside BigQuery	                            --->            Dataform
+No-code data cleaning / analyst workflow	                --->            Dataprep
+Visual ETL from many systems / enterprise connectors        --->            Data Fusion
+
+
+Custom scalable pipelines, Python/Java, batch + streaming -> Dataflow 
+    (not in this notes but always in exam choices)
