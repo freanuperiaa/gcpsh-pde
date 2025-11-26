@@ -1,0 +1,67 @@
+-------------------------------
+-- Dataplex - Intro
+-------------------------------
+
+Data Mesh Architecture
+    - Decentralized data management (each team handles their own data), 
+        centralized governance (universal policies, security control, access mgmt)
+    - domain ownership of data (sales team owns sales data, finance team owns financial data, and so on)
+    - treating data as a product for others to consume
+
+*IBM*
+A data mesh is a decentralized data architecture that organizes data by 
+business domain—such as marketing, sales or customer service.
+
+
+Dataplex - "intelligent data fabric"
+         - designed to weave together data mgmt across various environments, 
+            creating a streamlined and unified way of handling data
+
+         - key functionalities:
+            .- unified data management
+            .- automated data lifecycle management
+            .- integrated analytics
+
+         - combines data cataloging, lineage, governance, and quality monitoring
+         - goal is to simplify data landscape across data lakes, warehouses, and databases within org
+
+*exam tip* think of Dataplex when you hear:
+                    - "decentralized data management"
+                    - "centralized data governance"
+                    - "data mesh"
+
+-------------------------------
+-- Dataplex - Roles and Access Management
+-------------------------------
+
+- Unified Access Management
+
+*Gemini*
+Dataplex's way to provide a centralized and consistent way to define, manage, and enforce security policies and 
+data access controls across a distributed data landscape, without moving the data. 
+
+Dataplex has its own roles that you can assign at the service level
+
+dataplex.dataOwner
+dataplex.dataWriter
+dataplex.dataReader 
+
+granting Dataplex roles automatically grants access to the data in other services
+that are part of the Dataplex-managed data mesh
+
+    e.g. dataplex.dataOwner of a BigQuery dataset can manage the underlying tables
+
+skip managing roles separately in each service
+
+note: there may still be more granular access controls each domain must apply at service level
+            (e.g. restrict access to sensitive data in a dataset/table)
+
+
+- Key Roles in Dataplex
+
+    Dataplex Administrator - full control of all Dataplex resources
+    Dataplex Data Owner - Manage data assets in the data mesh
+    Dataplex Data Writer - write access to data assets, but no admin privileges
+    Dataplex Data Reader - read-only access to data assets in the data mesh
+    Dataplex Metadata Reader - metadata only without accessing the data
+    Dataplex Viewer - ability to view the mesh and configured zones and assets without accessing data

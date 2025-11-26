@@ -1,0 +1,17 @@
+-------------------------------
+-- BigQuery Omni
+-------------------------------
+
+intended to unify multi-cloud analytics
+analyze data across GCP, AWS, and Azure without moving data
+
+Key features:
+    - SQL queries across clouds
+    - seamless integration
+    - Data security (Native GCP standards upheld)
+    - lower costs (reduces data movement and operational complexity)
+
+*Exam Tip* 
+    consider choosing BQ Omni if you are given a scenario where you need to 
+    integrate data into BQ from multiple cloud platforms
+

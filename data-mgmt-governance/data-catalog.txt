@@ -1,0 +1,77 @@
+-------------------------------
+-- Data Catalog - Intro
+-------------------------------
+
+fully-managed metadata management service
+
+allows orgs to quickly discover, manage, and understand their data in GCP
+
+provides a centralized metadata repository and allows you to search for 
+    specific data across all datasets and projects
+
+! Three important features for exam !
+    - metadata management
+    - data discovery & search
+    - policy tags & tag templates
+
+- Metadata management
+    create, store, and manage metadata about GCP data resources which helps in data discovery and governance
+
+    aggregates metadata across GCP services into one central repository
+
+- Data Discovery and Search
+    search metadata and discover data across GCP services
+    e.g. for a regulatory compliance audit, quickly locate datasets tagged with PII
+
+
+-------------------------------
+-- Tagging
+-------------------------------
+
+define custom metadata tags using tag templates, which can be applied to other 
+    GCP services for categorization and governance
+
+Data Catalog's taxonomy and policy tags can be used within BigQuery to enforce
+fine-grained (e.g. column-level) security policies, supporting a data mesh architecture
+
+Public VS Private Visibility (tags)
+
+Public Visibility - allows users who have the asset-level metadata permissions to also
+                    view the Data Catalog tag for that asset
+                  - e.g. people with bigquery.metadataViewer on a dataset can view and search
+                    the metadata tags for that dataset too
+
+Private Visibility - only users with the Data Catalog Tag Template Viwer role can view tags
+                   - e.g. people with bigquery.metadataViewer wont be able to see tags
+
+
+-------------------------------
+-- Data Catalog - IAM Roles
+-------------------------------
+
+Data Catalog Tag Template Viewer - view tag templates and metadata
+Data Catalog Tag Template User - apply existing tag templates to data assets
+Data Catalog Tag Template Editor - create, update, and delete tag templates
+
+Data Catalog Entry Viewer - view metadata entries in Data Catalog
+Data Catalog Entry Editor - create, update, and delete metadata entries
+Data Catalog Viewer - view all metadata and tag templates (read-only)
+
+Data Catalog Admin - Full access to manage entries, tags, and tag templates
+
+
+-------------------------------
+-- Data Catalog vs Dataplex
+-------------------------------
+
+Data Catalog
+    - provides searchable inventory of all data assets
+    - metadata tagging
+    - enhance data discover/visibility
+    - also supports data mesh arch thru tagging and visibility
+
+Dataplex
+    - more complete data mesh solution
+    - automates data security, governance, and lifecycle mgmt
+    - suitable for complex environments where data needs to be accessible and governed at scale
+
