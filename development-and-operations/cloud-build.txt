@@ -1,0 +1,49 @@
+
+-------------------------------
+-- CI/CD W Cloud Build
+-------------------------------
+
+fully-managed, serverless CI/CD platform
+automated builds, tests, and deployments
+integration w popular version control system (Github, Gitlab, Source Repositories)
+custom build steps using containerized tools
+
+- Cloud Build YAML files
+    defines the build steps and processes for CI/CD pipelines in Google Cloud
+    blueprint for each action required, from setting up envs to deploying code
+    
+    YAML files contain sequential steps for the build process, with each step specifying
+        name: docker image used to execute the step
+        args: the command and parameters run in that step
+        environment variables: optional variables to customize the step
+
+- Substitution Variables
+    allows to parametrize the YAML file, enabling different configurations (e.g. DEV vs PROD)
+    depending on the environment or branch
+
+    example:
+    `args: ['deploy', '--project', '${PROJECT_ID}']`
+
+- Triggers
+    builds are initiated by Triggers. Triggers can be based on a variety of actions in code repos
+        (such as commits to a specific branch or tag), or manual invocation
+
+
+-------------------------------
+-- Cross Project Deployments
+-------------------------------
+
+can use Cloud Build to automatically deploy code to an upper environment (ex. production environment)
+    only after tests are passed. Cloud Build service account in DEV would need access to deploy in PROD.
+
+
+-------------------------------
+-- Service Account Troubleshooting
+-------------------------------
+
+Cloud Build pipelines use a service account to access resources, push/pull images, and deploy to GCP services
+Keeping service account permissions updated can be challenging due to the number and variety of pipeline steps
+
+So, if your CI/CD service account is unable to complete a build, check for "permissions denied" errors in Cloud Logging
+
+
