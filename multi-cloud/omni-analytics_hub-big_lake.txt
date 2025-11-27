@@ -15,3 +15,85 @@ Key features:
     consider choosing BQ Omni if you are given a scenario where you need to 
     integrate data into BQ from multiple cloud platforms
 
+
+-------------------------------
+-- Analytics Hub
+-------------------------------
+
+centralized platform for data sharing and data collaboration
+
+launched in 2021 to adress growing need for data exchange within and between orgs
+
+2 main entities in Analytics Hub setup:
+    Publisher Project
+        - source datasets owned by the publisher, and the publisher can share access to these datasets by creating
+            a shared dataset
+    
+    Subscriber Project
+        - when a subscriber is granted access, they can create a linked dataset in their own
+            BQ environment, allowing them to query the published data
+
+
+- Private Exchange feature
+a secure and controlled environment for sharing sensitive data
+
+    - enhanced data privacy
+    - controlled access to datasets
+    - customizable sharing policies
+
+Private exchange is extremely useful when sharing proprietary data within a company or 
+collaborating on sensitive projects with trusted partners
+
+
+- Exam Scenarios
+
+On the exam, Analytics Hub is likely to show up as the answer when:
+    - you are sharing data with another organization
+    - you are sharing sensitive data within your organization or a trusted partner.
+        you would most likely use Private Exchange with sensitive data
+
+
+-------------------------------
+-- BigLake
+-------------------------------
+
+perform analytics regardless where the data is stored (even in other clouds)
+"break down data siloes"
+another GCP offering for hybrid and multi-cloud solutions
+
+not just analytics, but applying other benefits of BQ
+    - fine-grained security
+    - performance
+    - caching
+    - sharing
+
+maintain a single copy of your data wherever it is, and make it accessible across GCP
+(using BigLake connectors)
+
+accessible through BQ UI
+
+*Gemini*
+BigQuery Omni is a cross-cloud compute engine that runs queries locally on data stored in other clouds 
+(like AWS or Azure), while BigLake is a storage engine that provides a unified, governed interface for 
+querying data lakes and warehouses across clouds. 
+
+BigQuery Omni enables the compute to run on-site in remote clouds, whereas BigLake is the underlying technology that 
+makes it possible to manage and query data from different sources, including those accessed via Omni, 
+through a single, governed interface. 
+
+
+- BigLake Granular Security Policies
+
+you can apply security policies at table, row, column level on BigLake tables, even in other clouds
+
+
+- BigLake Tables vs BQ External Tables
+
+converting a BQ External table (e.g. GCS) into a BigLake table may improve performance and mgmt
+    - BigLake allows you to treat data as native
+    - better query performance 
+    - more granularity and access control
+    - integrated metadata caching
+
+
+
