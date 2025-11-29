@@ -1,0 +1,44 @@
+-------------------------------
+-- Data Loss Prevention (DLP) API
+-------------------------------
+
+powerful for discovering, classifying, and protecting sensitive data
+automated data recognition, risk analysis, data redaction, and de-identification
+protecting & identifying PII/PHI, and other sensitive info
+
+
+-------------------------------
+-- Data Protection Methods
+-------------------------------
+
+- Masking
+    replacing parts of the data with asterisks or other characters, while leaving some portions visible
+    ideal for scenario where you need to protect sensitive info but need to retain parts of it for reference
+    e.g. johndoe123@gmail.com -> jo*******3@g***.**m
+
+- Format-Preserving Encryption
+    better for when the data needs to follow a specific format for further processing, but does not need to be
+        human-readable for troubleshooting/reference
+    
+    e.g.
+        johndoe123@gmail.com -> edrf195zc@domain.org
+            John Doe         ->  Qelk Tir
+
+
+-------------------------------
+-- Integration with GCP Services
+-------------------------------
+
+Integration with other services
+
+At Rest
+    - Cloud Storage: scan and protect unstructured data like text files, CSV, JSON, etc
+    - BigQuery: protect sensitive info in tables, such as columns of PII, PHI, or other sensitive data
+
+In Transit
+    - Dataflow: apply DLP for real-time and batch data processing in ETL pipelines, before it is stored or processed
+    - Pub/Sub: scan and redact sensitive data in event-driven streaming pipelines
+
+
+The DLP API is easy to integrate into applications and pipelines due to its RESTful API design
+and the availability of client libraries in several widely-used programming languages

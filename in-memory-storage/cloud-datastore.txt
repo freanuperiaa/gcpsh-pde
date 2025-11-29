@@ -1,0 +1,55 @@
+-------------------------------
+-- Cloud Memorystore
+-------------------------------
+
+fully-managed in-memory data store
+useful as a caching layer (system that stores frequently accessed data in memory for better performance.)
+                          (think of sessions in a website, sumn like dat)
+
+- Use Cases
+    news website caching frequently-accessed articles
+    API Request caching - frequently accessed endpoint can be cached
+    ecommerce platform storing user session (e.g. cart contents)
+
+    *even though its not an analytic database*, Memorystore can be used for dashboard/analytics purposes when
+        low latency is required
+
+
+-------------------------------
+-- MemCached and Redis
+-------------------------------
+
+Redis Tiers
+    Basic Tier - cost effective, easy set-up, no high availability mode/failover protection
+    Standard Tier - More expensive, requires more config, high availability with automatic failover protection
+
+
+MemCached vs Redis
+
+* Gemini *
+Memorystore for Redis 
+    Best for: Use cases beyond simple caching, such as session stores, leaderboards, real-time analytics, and queues.
+    Key features: Supports advanced data structures like lists, sets, and hashes. It also offers persistence and high availability through its Standard tier.
+    When to choose: When you need more advanced functionality or high availability. 
+
+Memorystore for Memcached 
+    Best for: Simple, high-performance caching of database query results or HTML fragments.
+    Key features: Highly performant, simple, and widely used for its speed.
+    When to choose: When your application's needs are basic and speed is the top priority, and you don't need advanced data structures or persistence. 
+
+How to choose
+    Start with your use case: If you're building a new application and need something beyond simple caching, Redis is generally the more powerful and flexible option.
+    Consider features: If you need persistence, replication, or advanced data structures, choose Redis. If you just need a fast, simple cache, Memcached may be sufficient.
+    Check compatibility: Make sure your application's existing client libraries are compatible with your chosen option. 
+
+
+-------------------------------
+-- Monitoring Redis
+-------------------------------
+
+*Exam* it may be asked when it's time to upgrade Redis?
+
+    - Set up a *Cloud Monitoring Alert* to let you know once the "System Memory Usage Ratio" metric reaches 80%
+        this provides the percentage of the total memory being used
+
+        - when this is reached, it is recommended to upgrade to larger instance or higher tier

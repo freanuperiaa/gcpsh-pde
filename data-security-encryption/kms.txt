@@ -1,0 +1,64 @@
+-------------------------------
+-- Cloud Key Management Service (KMS)
+-------------------------------
+
+allows you to create, use, rotate, and destroy cryptographic keys
+
+Choosing KMS over GCP's default encryption
+    Google's default encryption is managed by Google, so you dont have control over key creation, management
+        (some orgs/regulations require organization to have greater management of these processes)
+
+
+-------------------------------
+-- Encryption Keys
+-------------------------------
+
+Customer-managed Encryption Keys (CMEK) - keys that the users manage themselves
+
+Key Lifecycle
+    Creation -> Usage -> Rotation -> Revocation
+
+
+Other key types
+    GMEK (Google-managed encryption keys) - default option, Google manages on your behalf
+    CSEK (Customer-supplied encryption keys) - bring your own keys for encryption purposes
+    Cloud HSM (Hardware Security Module) keys - generated and stored in a physical device
+    Tink Keys - open source cryptographic libraries
+
+*Gemini*
+CMEK (Customer-Managed Encryption Keys) uses Google's Cloud Key Management Service (KMS) to create and manage keys, 
+giving you control over their lifecycle, while CSEK (Customer-Supplied Encryption Keys) requires you to provide 
+your own keys with each request to GCP, with keys managed entirely outside the cloud. 
+
+CMEK provides enhanced control, auditability, and centralized management, while CSEK offers the highest level of 
+security by ensuring Google never has access to your keys, but comes with greater operational complexity and risk
+of data loss if keys are lost. 
+
+you can think of this as:
+GMEK (Google-managed) - you dont think about it
+CMEK via KMS - you set the lifecycle, rotation, revocation
+CSEK - you provide each key for every request, keys are managed outside
+
+
+-------------------------------
+-- Compromised CMEKs
+-------------------------------
+
+*Exam*
+what to do when a CMEK is compromised?
+    - data must be re-encrypted with a new key
+
+Two possible scenarios:
+    Cloud Storage
+        - Create a new CMEK
+        - Copy all files from current bucket to a new bucket, then assign the new CMEK to the new bucket
+            during the transfer
+
+    BigQuery
+        - Create a new CMEK
+        - Create a new dataset configured to use the new key
+        - Copy data without specifying a key, as you've already configured at the dataset level
+            - Table level would require it to be specified
+
+
+

@@ -1,0 +1,111 @@
+-------------------------------
+-- Cloud VPC - Intro
+-------------------------------
+
+- What is a VPC (Virtual Private Cloud)?
+
+Physical Network
+    - uses hardware components to facilitate communication and data transfer
+    - routers, switches, servers, cables
+
+Virtual Network
+    - abstracts the hardware components into software components
+    - virtual firewalls, network policies, and segmentation
+
+Cloud VPC = Logically-isolated virtual network
+            Essentially a physical network, but virtualized within VPC.
+
+
+-------------------------------
+-- IP Addresses
+-------------------------------
+
+    unique numerical identifiers assigned to each device connected to a network,
+        allowing them to communicate with one another
+
+    two main versions:
+        IPv4 (e.g. 192.168.1.1) (32-bit, most commonly used format)
+        IPv6 (e.g. 2001:0db8:85a3:0000:0000:8a2e:0370:7334) (32-bit)
+    
+    Private IP addresses are specific IP addresses used within private network such as in homes, offices,
+        or cloud environments
+        - *** the establishment of these private IP addresses, through VPC and subnets, is what allows
+            seamless internal communication***
+    
+        typical private IP ranges
+            10.0.0.0/8 - often used in large private networks, corporate envs. 16.8 million total IPs
+                       - "10." is fixed, and everything to the right can be up to 255.255.255
+            172.16.0.0/12 - medium-sized private networks, small to medium enterprises
+                          - 1 million total IPs
+            192.168.0.0/16 - common in home networks and small office routers
+                           - total IPs: 66, 536
+
+CIDR notation (IPv4)
+
+X.X.X.X/Y
+
+- numbers before the ^slash (Xs) determines the starting IP address of the network range
+- number after the slash (Y) determines the number of possible IP addresses
+    it tells us how many bits are used for the network part of the address
+
+to figure out the number of possible IP address in a subnet:
+
+    1. identify the number after the slash
+    2. subtract it from 32
+    3. calculate 2 to the power of that number
+
+e.g.
+    192.168.0.0/12 --> 32 - 12 = 20.
+                   --> 2^20 = 1,048,576 possible IP addresses
+
+
+-------------------------------
+-- Subnets
+-------------------------------
+
+subnet creation
+    subnets are defined at the region level.
+    user specifies the IP range, using CIDR notations
+
+two tules on subnet creation:
+    1. Subnet IP range must be within the overall range of the VPC
+        e.g., if your VPC has CIDR block of 10.0.0.0/16, the subnets you create 
+        must have IP ranges that fall within this overall range,
+        such as 10.0.1.0/24 or 10.0.2.0/24
+    2. Subnet IP range cannot overlap with other subnets in the same VPC to prevent IP address conflicts
+
+if you run out of IP addresses in your subnet, you can expand the subnet's IP range
+without needing to delete and recreate a subnet
+
+0.0.0.0/0 is not valid for a private subnet as it represents the default route for all IP addresses
+
+
+-------------------------------
+-- Private Google Access
+-------------------------------
+
+enabling "Private Google Access" allows VM instances with only internal IP addresses to connect to Google
+APIs and services without having external IP addresses
+
+
+if you have a VM inside your VPC, and if you dont have Private Google Access enabled, you will have to
+have that VM have an external IP so that it can communicate with GCP's APIs/services
+
+
+-------------------------------
+-- Private Service Connect
+-------------------------------
+
+PSC creates a private, internal connection between services within your VPC
+can also connect outside of the VPC
+
+
+Private Google Access vs Private Service Connect
+    Private Google Access is useful for outbound access from a private subnet to Google APIs,
+        butit doesnt provide inbound connectivity between services
+        (only one-directional. doesnt provide inbound access)
+
+    Private Service Connect ensures private internal communication
+
+
+
