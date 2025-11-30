@@ -1,0 +1,33 @@
+-------------------------------
+-- Cloud Firewall
+-------------------------------
+
+allows you to define and enforce rules that control network traffic to and from resources
+
+mainly for VMs
+also applies to:
+    Load Balancers
+    GKE Clusters
+    Cloud SQL instances
+
+includes controlling both ingress (incoming) and egress (outgoing) traffic
+
+- Firewall rules
+    act as guards, determining what traffic gets in and out of your VPC
+    rule criteria: protocols, IP ranges, ports, and tags, or on identity (service accounts)
+
+    Firewall rules have a "priority" attribute that determines the order in which they are evaluated
+        range - [0, 65535]. lower numbers indicate higher priority
+
+    identity-based firewall rules
+        when instances/services have svc accts with them, configuring rules based on those svc accts
+            can enhance security, as it allows for identity-based access control
+
+
+- Logging
+    firewall rule logging is disabled by default
+    to enable logging for a given Firewall rule:
+        in config page for the rule, find the "Logs" section, and set the "Logs" option to "On".
+        this logs connections that match the firewall rule
+
+

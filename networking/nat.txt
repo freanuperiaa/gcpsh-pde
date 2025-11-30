@@ -1,0 +1,26 @@
+-------------------------------
+-- Cloud NAT
+-------------------------------
+
+NAT - Network Address Translation
+technology used to map private IP addresses to public IP addresses, 
+    which allows communication to external networks
+
+enables VMs without public IP addresses to access the internet (outbound)
+
+*Gemini*
+It works by translating the private IP addresses of your instances into a shared public IP address assigned to 
+the Cloud NAT gateway, which sits on a Cloud Router. 
+This provides secure, managed connectivity without exposing your private instances directly to the internet for 
+inbound connections. 
+
+Benefits of Cloud NAT
+    - reduces attack surface by not requiring external IPs, preventing unsolicited inbound connections
+    - scales automatically
+    - high availability
+    - lower costs by reducing number of external IP addresses
+
+
+*Exam Tip* activating Cloud NAT often goes hand-in-hand with disallowing external IPs through the org policy:
+                    constraints/compute.vmExternalIpAccess
+

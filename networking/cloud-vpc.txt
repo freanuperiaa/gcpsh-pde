@@ -63,6 +63,8 @@ e.g.
 -- Subnets
 -------------------------------
 
+Subnets function as logical subdivisions within a VPC that enables more granular traffic control
+
 subnet creation
     subnets are defined at the region level.
     user specifies the IP range, using CIDR notations
@@ -106,6 +108,68 @@ Private Google Access vs Private Service Connect
         (only one-directional. doesnt provide inbound access)
 
     Private Service Connect ensures private internal communication
+
+
+-------------------------------
+-- Connecting to other networks
+-------------------------------
+
+- Shared VPC
+    allows you to extend the network from one project (host project) to other projects (service projects)
+        within the same organization
+
+    *note* host project should be dedicated to network resource control only. 
+        pipelines, ETLs, etc. that need to use the Shared VPC should be in the service projects
+    
+    - Granting Service Accounts access in Shared VPC    
+        svc accts in the service projects must be granted the compute.networkUser role on the 
+            shared VPC subnets in the host project to access network resources
+
+        e.g. give your Dataflow pipeline svc acct compute.networkUser role on your subnet to deploy on the Shared VPC
+
+
+- VPC Peering
+    allows connection of two VPC networks so they can communicate using internal, private IP addresses
+
+    connected VPCs can be either in the same org OR different orgs
+
+
+- Cloud VPN
+    connects an on-prem network, another cloud provider network, or a remote office network to a Cloud VPC
+        in GCP. Encrypted, but uses the public internet
+
+
+- Cloud Interconnect
+    a Separate GCP service that offers a secure, private, high-bandwidth connection from on-prem to GCP
+    consistent low-latency performance for tasks like large-scale data replication, disaster recovery, real-time processing
+
+    Types of Cloud Interconnect
+        Dedicated Interconnect - direct physical connection between on-prem and GCP
+                               - best for high-bandwidth, low latency, and direct private connectivity needs
+        Partner Interconnect   - goes through a supported service provider
+                               - suitable when lower bandwidth is okay or geographic flexibility is needed 
+                                    (if your data center is not near a Google Cloud edge location)
+        Cross-Cloud Interconnect - direct connection between your network in another cloud and Google's network
+
+
+-------------------------------
+-- Project Isolation Techniques
+-------------------------------
+
+Separate VPCs (Network Layer Isolation)
+    creating separate VPCs in each project and ensuring there is no peering or routing between them
+    this works at the network layer
+
+VPC Service Controls (Service Layer Isolation)
+    create a security perimeter around each project, preventing data exfiltration and 
+    ensuring resources in one project cannot access resources in another project
+    This works at the service layer
+
+    *Gemini*
+        Create a service perimeter: You configure a service perimeter at the organization level, which acts as the security boundary.
+        Add projects and services: You add GCP projects and services (like Cloud Storage, BigQuery, etc.) to the perimeter.
+        Define access policies: You set ingress and egress rules to control traffic to and from the perimeter. For example, you can create an ingress rule that only allows access to a Cloud Storage bucket from specific VPC networks within the perimeter.
+        Enforce the perimeter: Once the perimeter and its rules are set up, access to the protected services from outside the perimeter is denied by default. 
 
 
 
