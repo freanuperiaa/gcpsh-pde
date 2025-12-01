@@ -1,0 +1,87 @@
+-------------------------------
+-- Cloud SQL - Intro
+-------------------------------
+
+fully-managed RDBMS
+direct lift-and-shift of a traditional MySQL/PostgreSQL workload
+suitable for small-medium datasets, single-region deployments, and transactional use cases
+
+max storage: 64 TB
+    if you need more than this, you can use 
+            Spanner (more expensive)
+            BigTable (if NoSQL is an option)
+            BigQuery (analytical in  nature)
+
+
+-------------------------------
+-- Cloud SQL - Importing Data
+-------------------------------
+
+types of imports to Cloud SQL
+    - SQL dump file
+    - CSV files
+    - replication / direct transfer
+    - Database Migration Service
+
+best practices for importing data into Cloud SQL
+
+    - store your data in GCS first before importing it to Cloud SQL
+    - use correct flags for dump files (databases, hex-blob, skip-triggers, etc)
+    - SQL dump files, when imported, are not allowed to contain triggers, views, or stored procs
+    - compress data to reduce costs (Cloud SQL can import compressed .gz files)
+
+
+-------------------------------
+-- Cloud SQL - Availability and Recovery
+-------------------------------
+
+- Point-in-Time Recovery
+    allows you to restore the database to any past state
+    Cloud SQL for MySQL uses binary logging, and PostgreSQL uses write-ahead logging
+
+    how it works:
+        binary: records all changes to the database in binary format after the transaction is committed
+        WAL: logs changes before applying them to the database
+
+- Backups in Cloud SQL
+    Automatic Backups
+        - configure automatic daily backups within a 4-hour window. These are retained up to 7 days default
+        - if you need to retain for longer time, you need to export the backups to GCS
+
+    Manual Backups
+        - create manual backups anytime and retain them as long as you need
+    
+    Scheduled Exports
+        - export backups to GCS for long-term retention or compliance purposes
+
+- High availability and disaster recovery
+    - *Failover replicas* can be created to ensure high availability or disaster recovery
+    - should be set up in a different region from the master, or a different zone within the same region
+
+    if zone A experiences an outage which affects your primary Cloud SQL instance, the failover mechanism is triggered
+        this allows the system to seamlessly switch to the failover replica and ensures your app is running
+
+- Read replicas
+    Copies of the primary/master database instance that help distribute read operations so the primary
+        does not get overwhelmed. This increases availability and scalability
+    
+
+-------------------------------
+-- Cloud SQL Auth Proxy
+-------------------------------
+
+secure method to connect applications to Cloud SQL databases
+uses IAM-based authentication to manage access, allowing you to control which services can connect to the Cloud SQL instance
+ensures encrypted connections between the application and the Cloud SQL instance
+hides IP of your Cloud SQL instance to everyone else
+
+uses service accounts, granted IAM permissions
+cloudsql.instances.connect
+
+- Authorized Networks
+    this restricts access to a Cloud SQL instance by IP range
+    when using Cloud SQL Auth Proxy, leave Authorized Networks section blank, no need for it
+    Never add 0.0.0.0/0 to the Authorized Networks section. it is the default for all IP addresses
+
+
+

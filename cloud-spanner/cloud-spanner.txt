@@ -1,0 +1,52 @@
+-------------------------------
+-- Cloud Spanner - Intro
+-------------------------------
+
+RDBMS service in GCP designed for
+    Global availability
+    Global scalability
+    Global consistency
+
+
+-------------------------------
+-- Monitoring Health and Performance
+-------------------------------
+
+monitor Spanner in Cloud Monitoring, with at least roles/monitoring.viewer role
+
+Recommended CPU usage thresholds:
+    Single-Region:
+        High Priority CPU usage: <= 65%
+        24-hour smoothed aggregate CPu usage: < 90%
+    Multi-Region:
+        High Priority CPU usage: <= 45%
+        24-hour smoothed aggregate CPu usage: < 90%
+
+if exceeded, add nodes
+
+Data Ingestion monitoring
+    - when ingesting data, monitor the *rate of change* in the instance/storage/used_bytes metric
+    - tracks the storage usage in Cloud Spanner, 
+        which helps monitor the amount of data being successfully written to the database
+    - a sudden decrease in the rate of change could indicate issues
+
+
+-------------------------------
+-- Secondary Indexes
+-------------------------------
+
+Improving read performance
+for read-heavy workloads, sometimes these reads can take a long time if 
+    the base table needs to be accessed for every column
+
+creating a secondary index with the STORING clause allows the index to store additional columns,
+    reducing the need to access the base table for these columns
+
+downside is increase in storage, write latency, and maintenance
+upside is faster read
+
+*Gemini*
+In Spanner, a secondary index is an optional index created on columns other than the primary key to 
+improve the performance of queries that filter or sort on those non-key columns. 
+It functions like a separate, underlying table that stores a copy of the indexed data, sorted by the index key, 
+which avoids the need to scan the entire base table during a lookup. 

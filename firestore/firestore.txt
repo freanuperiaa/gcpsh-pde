@@ -1,0 +1,83 @@
+-------------------------------
+-- Firestore - Intro
+-------------------------------
+
+scalable, fully-managed, serverless NoSQL database
+
+real-time synchronization of clients
+
+ACID compliant
+
+multi-region access available
+
+- Use Cases:
+    Product catalogs (real-time inventory)
+    User profiles for mobile
+    Game save states
+    ACID/atomic transactions like transferring funds between accounts
+
+basically, any application that needs highly-available, strongly conssitent, structured, or 
+semi-structured data at scale, with real-time synchronization of data to clients
+
+What Firestore should NOT be used for
+    - Analytics. Firetore is a *transactional* db
+    - Extreme scale (10 million+ reads/writes per second? use BigTable)
+    - data that is unstructured (use GCS) or is semi-structured without strong consistency (use BigTable)
+    - Relational database migrations (use BigQuery)
+    - when you need near-zero latency (sub-10ms, use in-memory db like Redis, Cloud Memorystore)
+
+
+-------------------------------
+-- Data Modelling and Index Optimization
+-------------------------------
+
+- Hierarchies/data model
+    documents can have further subcollections of documents associated with them 
+        (ex. a user who has multiple order, person who has multiple visits in a hospital)
+    this establishes relationships and hierarchies within the data model
+
+    Collection
+        |--> document
+                |--> subcollection
+                            |--> document
+                                    |--> subcollection
+
+    - A collection can contain one or more documents
+    - A document can optionally contain one or more subcollections
+    - A subcollection can then contain one or more documents
+
+    and the structure can continue nesting further this way
+
+- Exploding compound indexes
+    To support enough filters, Firestore may generate an index for each possible combination of these fields.
+    This results in an exploding index as the combinations multiply across the multiple attributes in your collection
+
+    multiple fields with a wide range of values can lead to a combinatorial explosion, driving up costs
+        and slowing down performance
+    
+    *Prevent this* by manually configuring indexes in your index configuration file
+
+
+-------------------------------
+-- Location
+-------------------------------
+
+Choosing a location
+    you cannot change the region where you store your data in Firestore. 
+    You must create a new GCP project and a new Firestore database
+
+    you can choose a single region or multi-region
+        choose single region when most of your users will be in a certain area
+        choose multi-region if your users are global/widespread
+
+
+-------------------------------
+-- Datastore mode
+-------------------------------
+
+this serves as a bridge between the old Google Cloud Datastore and the newer Firestore
+allows full backward compatibility, so existing Datastore users can migrate to Firestore
+retains entity-based data model with strong consistency and high availability
+
+
+
